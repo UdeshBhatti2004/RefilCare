@@ -4,7 +4,7 @@ export interface PharmacyT {
   name: string;
   email: string;
   password: string;
-  phone: string;
+  phone?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -32,7 +32,7 @@ const PharmacySchema = new mongoose.Schema<PharmacyT>(
 
     phone: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   { timestamps: true }

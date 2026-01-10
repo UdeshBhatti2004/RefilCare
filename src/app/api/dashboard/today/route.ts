@@ -1,21 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
+import { getToken } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDb();
 
-    const { pharmacyId } = await req.json();
+    /// getting pharmacy from session
+    const token = await getToken({ req });
 
-    if (!pharmacyId) {
+    if (!token?.id) {
       return NextResponse.json(
-        { message: "pharmacyId is required" },
-        { status: 400 }
+        { message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    // Get today's date as YYYY-MM-DD (UTC-safe)
+    const pharmacyId = token.id; 
+
+    /// Get today's date as YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0];
 
     const medicines = await Medicine.find({

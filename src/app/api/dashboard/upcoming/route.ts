@@ -1,22 +1,26 @@
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDb();
 
-    const { pharmacyId } = await req.json();
+    /// pharmacy from session
+    const token = await getToken({ req });
 
-    if (!pharmacyId) {
+    if (!token?.id) {
       return NextResponse.json(
-        { message: "pharmacyId is not found" },
-        { status: 400 }
+        { message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    const toadayEnd = new Date();
-    toadayEnd.setHours(23, 59, 59, 999);
+    const pharmacyId = token.id;
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
     const next3days = new Date();
     next3days.setDate(next3days.getDate() + 3);
@@ -26,17 +30,15 @@ export async function POST(req: NextRequest) {
       pharmacyId,
       status: "active",
       refillDate: {
-        $gt: toadayEnd, // after today
-        $lte: next3days, // within 3 days
+        $gt: todayEnd,
+        $lte: next3days,
       },
     });
 
-
-      return NextResponse.json(
+    return NextResponse.json(
       medicines.map((m) => m.toObject()),
       { status: 200 }
     );
-
   } catch (error) {
     console.error("Upcoming dashboard error", error);
     return NextResponse.json(

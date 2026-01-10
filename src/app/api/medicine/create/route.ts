@@ -7,13 +7,25 @@
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDb();
 
+    /// getting logged-in pharmacy from session
+    const token = await getToken({ req });
+
+    if (!token?.id) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const pharmacyId = token.id; 
+
     const {
-      pharmacyId,
       patientId,
       medicineName,
       condition,
@@ -23,7 +35,6 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     if (
-      !pharmacyId ||
       !patientId ||
       !medicineName ||
       !condition ||
@@ -43,7 +54,7 @@ export async function POST(req: NextRequest) {
     refillDate.setDate(refillDate.getDate() + Math.ceil(totalDays));
 
     const medicine = await Medicine.create({
-      pharmacyId,
+      pharmacyId, // ✅ correct
       patientId,
       medicineName,
       condition,
@@ -51,7 +62,6 @@ export async function POST(req: NextRequest) {
       tabletsGiven,
       startDate,
       refillDate,
-      // status will default to "active" from schema
     });
 
     return NextResponse.json(

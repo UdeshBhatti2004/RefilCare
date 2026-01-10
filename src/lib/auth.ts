@@ -3,6 +3,8 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import connectDb from "./db"
 import Pharmacy from "@/models/pharmacyModel"
 import bcrypt from "bcryptjs"
+import GoogleProvider from "next-auth/providers/google";
+
 
 export const authOptions:NextAuthOptions={
    providers:[
@@ -12,6 +14,7 @@ export const authOptions:NextAuthOptions={
             email:{label:"Email",type:"text"},
             password:{label:"Password",type:"Password"}
         },
+        
         
         async authorize(credentials, req) {
             let email = credentials?.email
@@ -41,7 +44,11 @@ export const authOptions:NextAuthOptions={
 
         },
 
-    })
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
    ],
    callbacks:{
 
@@ -50,7 +57,7 @@ export const authOptions:NextAuthOptions={
          strategy:"jwt"
    },
    pages:{
-
+         signIn: "/login"
    },
      secret: process.env.NEXTAUTH_SECRET,
 

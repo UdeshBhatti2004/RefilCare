@@ -1,38 +1,39 @@
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDb();
 
-    const { pharmacyId } = await req.json();
+    /// getting pharmacy from logged-in session
+    const token = await getToken({ req });
 
-    if (!pharmacyId) {
+    if (!token?.id) {
       return NextResponse.json(
-        { message: "PharmacyId is not found" },
-        { status: 400 }
+        { message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    const startofToday = new Date();
-    startofToday.setHours(0, 0, 0, 0);
+    const pharmacyId = token.id; 
 
-    // Medicines whose refill date is before today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
     const medicines = await Medicine.find({
       pharmacyId,
       status: "active",
-      refillDate: { $lt: startofToday },
+      refillDate: { $lt: startOfToday },
     });
 
     return NextResponse.json(
-        medicines.map((m)=>m.toObject()),
-        {status:200}
-    )
-
+      medicines.map((m) => m.toObject()),
+      { status: 200 }
+    );
   } catch (error) {
-      console.error("Missed dashboard error", error);
+    console.error("Missed dashboard error", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
