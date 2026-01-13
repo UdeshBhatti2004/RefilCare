@@ -1,9 +1,3 @@
-// NOTE:
-// We do NOT take refillDate and status from the request.
-// - refillDate is calculated here on the backend
-// - status is set by the system (default: "active")
-// This keeps the data correct and avoids wrong values from the client.
-
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,17 +7,14 @@ export async function POST(req: NextRequest) {
   try {
     await connectDb();
 
-    /// getting logged-in pharmacy from session
     const token = await getToken({ req });
 
-    if (!token?.id) {
+    if (!token?.pharmacyId) {
       return NextResponse.json(
         { message: "Unauthorized" },
         { status: 401 }
       );
     }
-
-    const pharmacyId = token.id; 
 
     const {
       patientId,
@@ -48,13 +39,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // core logic
-    const totalDays = tabletsGiven / dosagePerDay;
+    // refill date calculation
+    const days = Math.floor(tabletsGiven / dosagePerDay);
     const refillDate = new Date(startDate);
-    refillDate.setDate(refillDate.getDate() + Math.ceil(totalDays));
+    refillDate.setDate(refillDate.getDate() + days);
 
     const medicine = await Medicine.create({
-      pharmacyId, // ✅ correct
+      pharmacyId: token.pharmacyId,
       patientId,
       medicineName,
       condition,
@@ -62,21 +53,41 @@ export async function POST(req: NextRequest) {
       tabletsGiven,
       startDate,
       refillDate,
+      status: "active",
     });
 
-    return NextResponse.json(
-      {
-        message: "Medicine created successfully",
-        medicine: medicine.toObject(),
-      },
-      { status: 201 }
-    );
+    return NextResponse.json(medicine.toObject(), { status: 201 });
   } catch (error) {
-    console.error("Error in creating medicine", error);
+    console.error("Error creating medicine", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    )
+  }
+}
 
+export async function GET(req: NextRequest) {
+  try {
+    await connectDb();
+
+    const token = await getToken({ req });
+    if (!token?.pharmacyId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const medicines = await Medicine.find({
+      pharmacyId: token.pharmacyId,
+    })
+      .populate("patientId", "name")
+      .sort({ createdAt: -1 });
+
+    return NextResponse.json(medicines);
+  } catch (error) {
+    console.error("Error fetching medicines", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
     );
   }
 }
+

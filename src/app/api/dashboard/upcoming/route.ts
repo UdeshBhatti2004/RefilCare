@@ -10,14 +10,11 @@ export async function POST(req: NextRequest) {
     /// pharmacy from session
     const token = await getToken({ req });
 
-    if (!token?.id) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!token?.pharmacyId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const pharmacyId = token.id;
+    const pharmacyId = token.pharmacyId;
 
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);

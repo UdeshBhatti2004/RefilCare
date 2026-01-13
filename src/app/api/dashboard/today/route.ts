@@ -10,14 +10,11 @@ export async function POST(req: NextRequest) {
     /// getting pharmacy from session
     const token = await getToken({ req });
 
-    if (!token?.id) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+    if (!token?.pharmacyId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const pharmacyId = token.id; 
+    const pharmacyId = token.pharmacyId;
 
     /// Get today's date as YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0];
