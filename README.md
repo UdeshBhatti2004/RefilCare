@@ -9,13 +9,11 @@ The goal of this project is to build a clean, production-ready foundation for ma
 
 RefilCare follows a **tenant-based architecture**, where each **Pharmacy** acts as an isolated tenant managing its own patients and medicines.
 
-The project intentionally focuses on backend correctness first:
-- Proper data modeling
-- Reliable refill date calculation
-- Secure authentication & authorization
-- Predictable and testable APIs
-
-Frontend features are layered **only after validating backend logic and auth flow**.
+The project prioritizes correctness and clarity:
+- Reliable data modeling
+- Backend-driven refill calculations
+- Predictable APIs
+- Clean and understandable UI
 
 ---
 
@@ -33,8 +31,8 @@ Frontend features are layered **only after validating backend logic and auth flo
 ### 🗄️ Data Models
 - **Pharmacy** – Authentication owner & tenant
 - **Patient** – Linked to a pharmacy
-- **Medicine** – Core model with refill logic
-- **RefillLog** – Designed for tracking refill/missed events (pending wiring)
+- **Medicine** – Core model with backend refill logic
+- **RefillLog** – Schema created (logic pending)
 
 ---
 
@@ -49,28 +47,33 @@ Frontend features are layered **only after validating backend logic and auth flo
 
 ---
 
-### 🛠️ Technical Details
-- MongoDB connection reuse for development stability
-- Fixed Mongoose serialization issues using `.toObject()`
-- Correct MongoDB collection naming
-- Date-only comparisons to avoid timezone bugs
-- APIs and auth flows tested using **Postman**
+### 🎨 Frontend UI (Current)
+- **Create Medicine Page**
+  - Patient selection
+  - Condition-based inputs
+  - Dosage & tablet entry
+  - Refill duration preview
+  - Fully responsive layout
+
+- **List Medicines Page**
+  - Displays medicines per pharmacy
+  - Clean, dashboard-aligned design
 
 ---
 
 ## 🧪 Testing
-- Manual API testing with Postman
-- Authentication flows verified:
-  - Credentials login
-  - Google OAuth
-  - JWT session persistence
+- Manual API testing using Postman
+- Authentication flows verified
+- Backend logic validated before UI integration
 
 ---
 
 ## 🚧 Work in Progress
-- Session-based API protection
-- Wiring `RefillLog` for refill and missed refill tracking
-- Frontend API integration
+- Medicine details page
+- Medicine status handling
+- Refill tracking using `RefillLog`
+- Route protection
+- Dashboard enhancements
 
 ---
 
@@ -84,6 +87,4 @@ Frontend features are layered **only after validating backend logic and auth flo
 ---
 
 ## 📌 Notes
-This project is built incrementally, validating each layer before moving forward to ensure a secure, maintainable, and production-ready architecture.
-
-More updates will be added as the project evolves.
+RefilCare is built incrementally, validating each layer before moving forward to ensure a maintainable and production-ready architecture.
