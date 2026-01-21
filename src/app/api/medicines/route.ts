@@ -75,19 +75,35 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 1️⃣ normalize legacy refilled → active
+    await Medicine.updateMany(
+      { pharmacyId: token.pharmacyId, status: "refilled" },
+      { $set: { status: "active" } }
+    );
+
+    // 2️⃣ auto-mark missed
+    await Medicine.updateMany(
+      {
+        pharmacyId: token.pharmacyId,
+        status: "active",
+        refillDate: { $lt: today },
+      },
+      { $set: { status: "missed" } }
+    );
+
+    // 3️⃣ return medicines
     const medicines = await Medicine.find({
       pharmacyId: token.pharmacyId,
-    })
-      .populate("patientId", "name")
-      .sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 });
 
     return NextResponse.json(medicines);
   } catch (error) {
-    console.error("Error fetching medicines", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("GET medicines error", error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
+
 

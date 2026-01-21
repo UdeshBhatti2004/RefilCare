@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import "@/models/patientModel"; 
 
 export interface MedicineT {
   pharmacyId: mongoose.Types.ObjectId;
@@ -28,9 +29,9 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
     },
 
     patientId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
-      required: true,
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Patient",
+      required:true,
     },
 
     medicineName: {

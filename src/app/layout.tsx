@@ -24,7 +24,11 @@ export default function RootLayout({
       <body
          className={`${inter.variable} font-sans antialiased`}>
           <ClientProvider>
-       <LayoutClient> {children}</LayoutClient> 
+       <LayoutClient> 
+        <div className="pt-20">
+        {children}
+        </div>
+        </LayoutClient> 
         <Toaster position="top-right" />
         </ClientProvider>
       </body>

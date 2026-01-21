@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Pill,
@@ -26,8 +26,12 @@ type Condition = "BP" | "Diabetes" | "Thyroid" | "Other";
 export default function NewMedicinePage() {
   const router = useRouter();
 
+  // ✅ ONLY ADDITION (patientId from URL)
+  const searchParams = useSearchParams();
+  const patientIdFromUrl = searchParams.get("patientId");
+
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [patientId, setPatientId] = useState("");
+  const [patientId, setPatientId] = useState(patientIdFromUrl || "");
 
   const [medicineName, setMedicineName] = useState("");
   const [condition, setCondition] = useState<Condition | "">("");
@@ -218,10 +222,9 @@ export default function NewMedicinePage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 1.5"
                     value={dosagePerDay}
                     onChange={(e) => setDosagePerDay(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3"
                   />
                 </div>
 
@@ -231,10 +234,9 @@ export default function NewMedicinePage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 30"
                     value={tabletsGiven}
                     onChange={(e) => setTabletsGiven(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3"
                   />
                 </div>
 
@@ -246,14 +248,14 @@ export default function NewMedicinePage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT SIDEBAR */}
+          {/* RIGHT SIDEBAR — REFILL PREVIEW (UNCHANGED) */}
           <div className="space-y-6 xl:sticky xl:top-24">
             <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-lg">
               <h3 className="text-lg font-bold mb-4">Refill Preview</h3>
@@ -263,7 +265,9 @@ export default function NewMedicinePage() {
                 </p>
                 <p className="text-2xl font-bold">
                   {dosagePerDay && tabletsGiven
-                    ? Math.floor(Number(tabletsGiven) / Number(dosagePerDay))
+                    ? Math.floor(
+                        Number(tabletsGiven) / Number(dosagePerDay)
+                      )
                     : "--"}{" "}
                   days
                 </p>

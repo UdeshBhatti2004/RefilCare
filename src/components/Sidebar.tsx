@@ -19,8 +19,8 @@ import {
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Patients", href: "/patients", icon: Users },
-  { name: "Medicines", href: "/medicines", icon: Pill },
+  { name: "Patients", href: "/patient", icon: Users },
+  { name: "Medicines", href: "/medicine", icon: Pill },
 ];
 
 export default function Sidebar() {
