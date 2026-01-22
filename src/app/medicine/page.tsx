@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Pill, User, Calendar, ArrowRight, Plus } from "lucide-react";
 import toast from "react-hot-toast";
@@ -19,24 +20,39 @@ type Medicine = {
 };
 
 export default function MedicinesPage() {
+  const searchParams = useSearchParams();
+  const filter = searchParams.get("filter"); // today | upcoming | missed
+
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
+
+    let url = "/api/medicines";
+    if (filter) {
+      url += `?filter=${filter}`;
+    }
+
     axios
-      .get("/api/medicines", { withCredentials: true })
+      .get(url, { withCredentials: true })
       .then((res) => setMedicines(res.data))
       .finally(() => setLoading(false));
-  }, []);
+  }, [filter]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] px-4 sm:px-6 lg:px-10 xl:px-16 py-16">
-      {/* Header */}
+
+    
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Medicines</h1>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Medicines
+          </h1>
           <p className="text-slate-500 mt-1">
-            Manage all active and past medicines
+            {filter
+              ? `Showing ${filter} medicines`
+              : "Manage all active and past medicines"}
           </p>
         </div>
 
@@ -49,10 +65,20 @@ export default function MedicinesPage() {
         </Link>
       </div>
 
-      {/* Loading */}
-      {loading && <p className="text-slate-500">Loading medicines...</p>}
+      
+      {loading && (
+        <p className="text-slate-500">
+          Loading medicines...
+        </p>
+      )}
 
-      {/* List */}
+     
+      {!loading && medicines.length === 0 && (
+        <p className="text-slate-400">
+          No medicines found
+        </p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {medicines.map((m) => {
           const today = new Date();
@@ -62,7 +88,8 @@ export default function MedicinesPage() {
           refillDate.setHours(0, 0, 0, 0);
 
           const isDue =
-            m.status !== "stopped" && refillDate.getTime() <= today.getTime();
+            m.status !== "stopped" &&
+            refillDate.getTime() <= today.getTime();
 
           return (
             <motion.div
@@ -76,7 +103,9 @@ export default function MedicinesPage() {
                   <h3 className="font-bold text-slate-900 text-lg">
                     {m.medicineName}
                   </h3>
-                  <p className="text-sm text-slate-500">{m.condition}</p>
+                  <p className="text-sm text-slate-500">
+                    {m.condition}
+                  </p>
                 </div>
 
                 <div className="flex flex-col items-end">
@@ -124,36 +153,39 @@ export default function MedicinesPage() {
                       </button>
                     )}
 
-                    {/* Stop */}
-                    {m.status !== "stopped" && (
+                    {/* Resume */}
+                    {m.status === "stopped" && (
                       <button
                         onClick={async () => {
                           try {
                             await axios.patch(
                               `/api/medicines/${m._id}/status`,
-                              { action: "stop" },
+                              { action: "resume" },
                             );
 
                             setMedicines((prev) =>
                               prev.map((med) =>
                                 med._id === m._id
-                                  ? { ...med, status: "stopped" }
+                                  ? { ...med, status: "active" }
                                   : med,
                               ),
                             );
 
-                            toast.success("Medicine stopped");
-                          } catch {
-                            toast.error("Failed to stop medicine");
+                            toast.success("Medicine restarted");
+                          } catch (err: any) {
+                            toast.error(
+                              err?.response?.data?.message ||
+                                "Failed to restart medicine",
+                            );
                           }
                         }}
-                        className="text-xs px-3 py-1 border rounded text-red-600 hover:bg-red-50"
+                        className="text-xs px-3 py-1 border rounded text-green-600 hover:bg-green-50"
                       >
-                        Stop
+                        Resume
                       </button>
                     )}
 
-                    {/* 🗑 Delete (TESTING ONLY) */}
+                    {/* Delete */}
                     <button
                       onClick={async () => {
                         const ok = confirm(
@@ -162,10 +194,14 @@ export default function MedicinesPage() {
                         if (!ok) return;
 
                         try {
-                          await axios.delete(`/api/medicines/${m._id}`);
+                          await axios.delete(
+                            `/api/medicines/${m._id}`,
+                          );
 
                           setMedicines((prev) =>
-                            prev.filter((med) => med._id !== m._id),
+                            prev.filter(
+                              (med) => med._id !== m._id,
+                            ),
                           );
 
                           toast.success("Medicine deleted");
@@ -192,7 +228,8 @@ export default function MedicinesPage() {
 
                 <div className="flex items-center gap-2">
                   <Calendar size={14} />
-                  Refill by {new Date(m.refillDate).toLocaleDateString()}
+                  Refill by{" "}
+                  {new Date(m.refillDate).toLocaleDateString()}
                 </div>
               </div>
 

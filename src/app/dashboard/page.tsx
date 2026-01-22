@@ -2,50 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
-import {
-  CalendarCheck,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { CalendarCheck, Clock, AlertTriangle } from "lucide-react";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  console.log(session)
+  const router = useRouter();
 
   const [todayCount, setTodayCount] = useState(0);
   const [upcomingCount, setUpcomingCount] = useState(0);
   const [missedCount, setMissedCount] = useState(0);
+  const [activity, setActivity] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!session?.user?.pharmacyId) return;
+    if (!session) return;
 
-    const payload = {
-      pharmacyId: session.user.pharmacyId,
-    };
-    console.log(payload)
-
-    api.post("/dashboard/today", payload)
-      .then((res) => setTodayCount(res.data.length))
+    api.get("/dashboard/summary")
+      .then((res) => {
+        setTodayCount(res.data.today);
+        setUpcomingCount(res.data.upcoming);
+        setMissedCount(res.data.missed);
+      })
       .catch(() => {});
 
-    api.post("/dashboard/upcoming", payload)
-      .then((res) => setUpcomingCount(res.data.length))
-      .catch(() => {});
-
-    api.post("/dashboard/missed", payload)
-      .then((res) => setMissedCount(res.data.length))
+    api.get("/dashboard/activity")
+      .then((res) => setActivity(res.data))
       .catch(() => {});
   }, [session]);
 
   return (
     <div className="p-6 lg:p-10 space-y-8 bg-slate-50 min-h-screen">
-      
+
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
         <p className="text-slate-500 mt-1">
           Overview of refills and reminders
         </p>
@@ -53,9 +44,12 @@ export default function DashboardPage() {
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        
+
         {/* Today */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+        <div
+          onClick={() => router.push("/medicine?filter=today")}
+          className="cursor-pointer bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-500">
@@ -69,13 +63,13 @@ export default function DashboardPage() {
               <CalendarCheck className="text-blue-600" size={22} />
             </div>
           </div>
-          <p className="text-sm text-slate-500 mt-4">
-            Patients scheduled for refill today
-          </p>
         </div>
 
         {/* Upcoming */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+        <div
+          onClick={() => router.push("/medicine?filter=upcoming")}
+          className="cursor-pointer bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-500">
@@ -89,13 +83,13 @@ export default function DashboardPage() {
               <Clock className="text-indigo-600" size={22} />
             </div>
           </div>
-          <p className="text-sm text-slate-500 mt-4">
-            Scheduled in the next few days
-          </p>
         </div>
 
         {/* Missed */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+        <div
+          onClick={() => router.push("/medicine?filter=missed")}
+          className="cursor-pointer bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-500">
@@ -109,16 +103,48 @@ export default function DashboardPage() {
               <AlertTriangle className="text-red-600" size={22} />
             </div>
           </div>
-          <p className="text-sm text-slate-500 mt-4">
-            Patients who missed refill dates
-          </p>
         </div>
 
       </div>
 
-      {/* Placeholder section */}
-      <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-10 text-center text-slate-400">
-        Refill timeline / recent activity will appear here
+      {/* Recent Activity */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">
+          Recent Refill Activity
+        </h3>
+
+        {activity.length === 0 ? (
+          <p className="text-slate-400 text-sm text-center py-6">
+            No recent refill activity
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {activity.map((log) => (
+              <li
+                key={log._id}
+                className="flex items-start justify-between border-b last:border-none pb-4"
+              >
+                <div>
+                  <p className="text-slate-900 font-medium">
+                    {log.patientId?.name}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {log.medicineId?.medicineName}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-sm text-slate-600">
+                    {new Date(log.refillDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {log.tabletsGiven} tablets
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
     </div>

@@ -42,7 +42,7 @@ export async function GET(
 
     return NextResponse.json(medicine);
   } catch (error) {
-    console.error("❌ Error fetching medicine:", error);
+    console.error("Error fetching medicine:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
@@ -67,7 +67,7 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    // 1️⃣ Check medicine exists
+    ///  Check medicine exists
     const medicine = await Medicine.findOne({
       _id: id,
       pharmacyId: token.pharmacyId,
@@ -80,7 +80,7 @@ export async function DELETE(
       );
     }
 
-    // 2️⃣ Check refill history
+    /// Check refill history
     const hasRefills = await RefillLog.exists({
       medicineId: medicine._id,
     });
@@ -95,7 +95,6 @@ export async function DELETE(
       );
     }
 
-    // 3️⃣ Safe delete
     await Medicine.deleteOne({ _id: medicine._id });
 
     return NextResponse.json({

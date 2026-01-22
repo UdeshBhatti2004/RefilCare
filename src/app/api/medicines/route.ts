@@ -3,17 +3,24 @@ import Medicine from "@/models/medicineModel";
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+
+function utcDay(date: Date) {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate()
+    )
+  );
+}
+
 export async function POST(req: NextRequest) {
   try {
     await connectDb();
 
     const token = await getToken({ req });
-
     if (!token?.pharmacyId) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const {
@@ -39,10 +46,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // refill date calculation
     const days = Math.floor(tabletsGiven / dosagePerDay);
+
     const refillDate = new Date(startDate);
-    refillDate.setDate(refillDate.getDate() + days);
+    refillDate.setUTCDate(refillDate.getUTCDate() + days);
 
     const medicine = await Medicine.create({
       pharmacyId: token.pharmacyId,
@@ -62,7 +69,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -75,29 +82,34 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { searchParams } = new URL(req.url);
+    const filter = searchParams.get("filter");
 
-    // 1️⃣ normalize legacy refilled → active
-    await Medicine.updateMany(
-      { pharmacyId: token.pharmacyId, status: "refilled" },
-      { $set: { status: "active" } }
-    );
+    const today = utcDay(new Date());
 
-    // 2️⃣ auto-mark missed
-    await Medicine.updateMany(
-      {
-        pharmacyId: token.pharmacyId,
-        status: "active",
-        refillDate: { $lt: today },
-      },
-      { $set: { status: "missed" } }
-    );
-
-    // 3️⃣ return medicines
-    const medicines = await Medicine.find({
+    let medicines = await Medicine.find({
       pharmacyId: token.pharmacyId,
     }).sort({ createdAt: -1 });
+
+    if (filter) {
+      medicines = medicines.filter((m) => {
+        const refillDate = utcDay(new Date(m.refillDate));
+
+        if (filter === "today") {
+          return refillDate.getTime() === today.getTime();
+        }
+
+        if (filter === "upcoming") {
+          return refillDate.getTime() > today.getTime();
+        }
+
+        if (filter === "missed") {
+          return refillDate.getTime() < today.getTime();
+        }
+
+        return true;
+      });
+    }
 
     return NextResponse.json(medicines);
   } catch (error) {
@@ -105,5 +117,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
-
-

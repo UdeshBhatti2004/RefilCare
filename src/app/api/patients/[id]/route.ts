@@ -18,7 +18,6 @@ export async function GET(
       )
     }
 
-    // ✅ FIX: await params
     const { id } = await context.params
 
     const patient = await Patient.findOne({
