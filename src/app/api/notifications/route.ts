@@ -1,0 +1,23 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectDb from "@/lib/db";
+import Notification from "@/models/notificationModel";
+import { getToken } from "next-auth/jwt";
+
+export async function GET(req: NextRequest) {
+  await connectDb();
+
+  const token = await getToken({ req });
+  if (!token?.pharmacyId) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const notifications = await Notification.find({
+    pharmacyId: token.pharmacyId,
+  })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .populate("patientId", "name")
+    .populate("medicineId", "medicineName");
+
+  return NextResponse.json(notifications);
+}

@@ -39,7 +39,7 @@ const RefillLogSchema = new mongoose.Schema<RefillLogT>(
     tabletsGiven: {
       type: Number,
       required: true,
-      min: 1,
+      min: 0,
     },
   },
   { timestamps: true }

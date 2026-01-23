@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [upcomingCount, setUpcomingCount] = useState(0);
   const [missedCount, setMissedCount] = useState(0);
   const [activity, setActivity] = useState<any[]>([]);
+  const [cronLoading, setCronLoading] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -30,6 +31,33 @@ export default function DashboardPage() {
       .then((res) => setActivity(res.data))
       .catch(() => {});
   }, [session]);
+
+  async function runCron() {
+    try {
+      setCronLoading(true);
+
+      const res = await fetch("/api/cron/mark-missed");
+      const data = await res.json();
+
+      alert(
+  `Cron executed successfully ✅\n\n` +
+  `🩺 Medicines marked missed: ${data.medicinesMarkedMissed}\n` +
+  `🔔 Notifications created: ${data.notificationsCreated}`
+);
+
+
+      // reload dashboard data
+      const summary = await api.get("/dashboard/summary");
+      setTodayCount(summary.data.today);
+      setUpcomingCount(summary.data.upcoming);
+      setMissedCount(summary.data.missed);
+
+    } catch {
+      alert("Cron execution failed");
+    } finally {
+      setCronLoading(false);
+    }
+  }
 
   return (
     <div className="p-6 lg:p-10 space-y-8 bg-slate-50 min-h-screen">
@@ -106,6 +134,22 @@ export default function DashboardPage() {
         </div>
 
       </div>
+
+      {/* 🔧 DEV ONLY: Cron Trigger */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="bg-white border border-dashed border-red-200 rounded-2xl p-6">
+          <h3 className="font-semibold text-red-600 mb-2">
+            Developer Tools
+          </h3>
+          <button
+            onClick={runCron}
+            disabled={cronLoading}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-50"
+          >
+            {cronLoading ? "Running Cron..." : "Run Missed Refill Cron"}
+          </button>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="bg-white border border-slate-100 rounded-2xl p-6">

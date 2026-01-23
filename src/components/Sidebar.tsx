@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -25,29 +25,55 @@ const navItems = [
 
 export default function Sidebar() {
   const { status } = useSession();
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 🔔 Fetch unread notifications ONLY when sidebar opens
+ useEffect(() => {
+  if (!open) return;
+
+  fetch("/api/notifications", { cache: "no-store" })
+    .then(async (res) => {
+      if (!res.ok) return [];
+      const text = await res.text();
+      return text ? JSON.parse(text) : [];
+    })
+    .then((data) => {
+      const unread = data.filter((n: any) => !n.isRead).length;
+      setUnreadCount(unread);
+    })
+    .catch(() => {
+      setUnreadCount(0);
+    });
+}, [open]);
+
 
   return (
     <>
       {/* TOP BAR */}
-      <div className="
-        fixed top-0 left-0 right-0 z-40
-        h-16 lg:h-20
-        bg-white/90 backdrop-blur-md
-        border-b border-slate-200
-        shadow-sm
-        flex items-center justify-between
-        px-5 sm:px-6 lg:px-10
-      ">
+      <div
+        className="
+          fixed top-0 left-0 right-0 z-40
+          h-16 lg:h-20
+          bg-white/90 backdrop-blur-md
+          border-b border-slate-200
+          shadow-sm
+          flex items-center justify-between
+          px-5 sm:px-6 lg:px-10
+        "
+      >
         <div className="flex items-center gap-3">
-          <div className="
-            h-9 w-9 lg:h-11 lg:w-11
-            bg-gradient-to-br from-blue-600 to-indigo-600
-            rounded-xl
-            flex items-center justify-center
-            shadow-md shadow-blue-200
-          ">
+          <div
+            className="
+              h-9 w-9 lg:h-11 lg:w-11
+              bg-gradient-to-br from-blue-600 to-indigo-600
+              rounded-xl
+              flex items-center justify-center
+              shadow-md shadow-blue-200
+            "
+          >
             <Plus className="text-white" size={20} strokeWidth={3} />
           </div>
 
@@ -106,15 +132,17 @@ export default function Sidebar() {
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 group"
               >
-                <div className="
-                  h-10 w-10
-                  bg-blue-600
-                  rounded-[14px]
-                  flex items-center justify-center
-                  shadow-md
-                  transition-transform
-                  group-hover:rotate-12
-                ">
+                <div
+                  className="
+                    h-10 w-10
+                    bg-blue-600
+                    rounded-[14px]
+                    flex items-center justify-center
+                    shadow-md
+                    transition-transform
+                    group-hover:rotate-12
+                  "
+                >
                   <Plus className="text-white" size={22} strokeWidth={2.5} />
                 </div>
 
@@ -122,14 +150,16 @@ export default function Sidebar() {
                   <span className="text-lg font-bold text-slate-900 leading-none">
                     MedRefill
                   </span>
-                  <span className="
-                    text-[10px]
-                    font-bold
-                    text-blue-600
-                    tracking-[0.18em]
-                    uppercase
-                    mt-1
-                  ">
+                  <span
+                    className="
+                      text-[10px]
+                      font-bold
+                      text-blue-600
+                      tracking-[0.18em]
+                      uppercase
+                      mt-1
+                    "
+                  >
                     Provider
                   </span>
                 </div>
@@ -145,14 +175,16 @@ export default function Sidebar() {
 
             {/* NAV */}
             <div className="flex-1 px-4 py-6">
-              <p className="
-                px-4 mb-4
-                text-[11px]
-                font-bold
-                text-slate-400
-                uppercase
-                tracking-[0.15em]
-              ">
+              <p
+                className="
+                  px-4 mb-4
+                  text-[11px]
+                  font-bold
+                  text-slate-400
+                  uppercase
+                  tracking-[0.15em]
+                "
+              >
                 Main Menu
               </p>
 
@@ -176,40 +208,68 @@ export default function Sidebar() {
                         }
                       `}
                     >
-                      <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                      <item.icon
+                        size={20}
+                        strokeWidth={isActive ? 2.5 : 2}
+                      />
                       <span className="text-[15px]">{item.name}</span>
                     </Link>
                   );
                 })}
               </nav>
 
+              {/* SUPPORT */}
               <div className="mt-10">
-                <p className="
-                  px-4 mb-4
-                  text-[11px]
-                  font-bold
-                  text-slate-400
-                  uppercase
-                  tracking-[0.15em]
-                ">
+                <p
+                  className="
+                    px-4 mb-4
+                    text-[11px]
+                    font-bold
+                    text-slate-400
+                    uppercase
+                    tracking-[0.15em]
+                  "
+                >
                   Support
                 </p>
 
                 <div className="space-y-1.5">
                   <Link
                     href="/settings"
+                    onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:text-blue-600 rounded-xl transition-all border border-transparent hover:border-slate-100"
                   >
                     <Settings size={20} />
                     Settings
                   </Link>
 
+                  {/* 🔔 Notifications with Badge */}
                   <Link
-                    href="/alerts"
-                    className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:text-blue-600 rounded-xl transition-all border border-transparent hover:border-slate-100"
+                    href="/notifications"
+                    onClick={() => {
+                      setUnreadCount(0); // 🔥 clear badge immediately
+                      setOpen(false);
+                    }}
+                    className="relative flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:text-blue-600 rounded-xl transition-all border border-transparent hover:border-slate-100"
                   >
                     <Bell size={20} />
-                    Notifications
+                    <span>Notifications</span>
+
+                    {unreadCount > 0 && (
+                      <span
+                        className="
+                          absolute right-4
+                          min-w-[18px] h-[18px]
+                          px-1
+                          text-[11px] font-bold
+                          rounded-full
+                          bg-red-600 text-white
+                          flex items-center justify-center
+                        "
+                      >
+                        {unreadCount}
+                      </span>
+                    )}
                   </Link>
                 </div>
               </div>

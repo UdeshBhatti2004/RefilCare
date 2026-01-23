@@ -33,35 +33,40 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     if (
-      !patientId ||
-      !medicineName ||
-      !condition ||
-      !dosagePerDay ||
-      !tabletsGiven ||
-      !startDate
-    ) {
-      return NextResponse.json(
-        { message: "All fields are required" },
-        { status: 400 }
-      );
-    }
+  !patientId ||
+  !medicineName ||
+  !condition ||
+  dosagePerDay === undefined ||
+  tabletsGiven === undefined ||
+  !startDate
+) {
+  return NextResponse.json(
+    { message: "All fields are required" },
+    { status: 400 }
+  );
+}
+
 
     const days = Math.floor(tabletsGiven / dosagePerDay);
 
-    const refillDate = new Date(startDate);
-    refillDate.setUTCDate(refillDate.getUTCDate() + days);
+// 🔑 normalize startDate first
+const start = utcDay(new Date(startDate));
 
-    const medicine = await Medicine.create({
-      pharmacyId: token.pharmacyId,
-      patientId,
-      medicineName,
-      condition,
-      dosagePerDay,
-      tabletsGiven,
-      startDate,
-      refillDate,
-      status: "active",
-    });
+const refillDate = new Date(start);
+refillDate.setUTCDate(refillDate.getUTCDate() + days);
+
+const medicine = await Medicine.create({
+  pharmacyId: token.pharmacyId,
+  patientId,
+  medicineName,
+  condition,
+  dosagePerDay,
+  tabletsGiven,
+  startDate: start,
+  refillDate,
+  status: "active",
+});
+
 
     return NextResponse.json(medicine.toObject(), { status: 201 });
   } catch (error) {

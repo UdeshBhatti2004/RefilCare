@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import "@/models/patientModel"; 
+import "@/models/patientModel";
 
 export interface MedicineT {
   pharmacyId: mongoose.Types.ObjectId;
@@ -29,9 +29,9 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
     },
 
     patientId: {
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"Patient",
-      required:true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+      required: true,
     },
 
     medicineName: {
@@ -55,7 +55,7 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
     tabletsGiven: {
       type: Number,
       required: true,
-      min: 1,
+      min: 0,
     },
 
     startDate: {
@@ -70,11 +70,11 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
 
     status: {
       type: String,
-      enum: ["active", "refilled", "stopped"],
+      enum: ["active", "missed", "refilled", "stopped"],
       default: "active",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Medicine =
