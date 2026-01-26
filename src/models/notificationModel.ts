@@ -34,7 +34,7 @@ const NotificationSchema = new Schema<NotificationT>(
 
     type: {
       type: String,
-      enum: ["upcoming", "missed"],
+      enum: ["upcoming", "missed", "today"],
       required: true,
     },
 
@@ -48,7 +48,7 @@ const NotificationSchema = new Schema<NotificationT>(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.models.Notification ||

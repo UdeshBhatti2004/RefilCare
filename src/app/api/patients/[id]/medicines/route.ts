@@ -1,15 +1,19 @@
+import { NextRequest, NextResponse } from "next/server";
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
-import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+// utility: normalize to UTC date (same as your existing logic)
 function utcDay(date: Date) {
   return new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
   );
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
   try {
     await connectDb();
 
@@ -18,14 +22,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { id: patientId } = await context.params;
+
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get("filter");
 
     const today = utcDay(new Date());
 
-    // Added .populate() to exchange the ID for the actual Patient Name
+    // 🔒 CRITICAL FIX: patientId is enforced here
     let medicines = await Medicine.find({
       pharmacyId: token.pharmacyId,
+      patientId: patientId,
     })
       .populate("patientId", "name")
       .sort({ createdAt: -1 });
@@ -52,55 +59,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(medicines);
   } catch (error) {
-    console.error("GET medicines error", error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    await connectDb();
-
-    const token = await getToken({ req });
-    if (!token?.pharmacyId) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await req.json();
-
-    const {
-      patientId,
-      medicineName,
-      condition,
-      dosagePerDay,
-      tabletsGiven,
-      startDate,
-    } = body;
-
-    // calculate refill date
-    const refillDate = new Date(startDate);
-    const days = Math.floor(tabletsGiven / dosagePerDay);
-    refillDate.setDate(refillDate.getDate() + days);
-
-    const medicine = await Medicine.create({
-      pharmacyId: token.pharmacyId,
-      patientId,
-
-      medicineName,
-      condition,
-
-      dosagePerDay,
-      tabletsGiven,
-
-      startDate,
-      refillDate,
-
-      status: "active",
-    });
-
-    return NextResponse.json(medicine, { status: 201 });
-  } catch (error) {
-    console.error("POST medicine error", error);
+    console.error("GET patient medicines error", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

@@ -17,6 +17,14 @@ import {
   Bell,
 } from "lucide-react";
 
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import {
+  setUnreadCount,
+  acknowledgeNotifications,
+} from "@/redux/slices/notificationsSlices";
+import { useGetNotificationsQuery } from "@/redux/api/notificationsApi";
+
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Patients", href: "/patient", icon: Users },
@@ -26,70 +34,46 @@ const navItems = [
 export default function Sidebar() {
   const { status } = useSession();
   const pathname = usePathname();
+  const dispatch = useDispatch();
 
   const [open, setOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  // 🔔 Fetch unread notifications ONLY when sidebar opens
- useEffect(() => {
-  if (!open) return;
+  const { unreadCount, acknowledgedCount } = useSelector(
+    (state: RootState) => state.notification
+  );
 
-  fetch("/api/notifications", { cache: "no-store" })
-    .then(async (res) => {
-      if (!res.ok) return [];
-      const text = await res.text();
-      return text ? JSON.parse(text) : [];
-    })
-    .then((data) => {
-      const unread = data.filter((n: any) => !n.isRead).length;
-      setUnreadCount(unread);
-    })
-    .catch(() => {
-      setUnreadCount(0);
-    });
-}, [open]);
+  const { data: notifications = [] } = useGetNotificationsQuery();
 
+  useEffect(() => {
+    if (pathname === "/notifications") {
+      dispatch(acknowledgeNotifications());
+    }
+  }, [pathname, dispatch]);
+
+  useEffect(() => {
+    if (pathname === "/notifications") return;
+    const unread = notifications.filter((n: any) => !n.isRead).length;
+    if (unread !== unreadCount) {
+      dispatch(setUnreadCount(unread));
+    }
+  }, [notifications, unreadCount, pathname, dispatch]);
 
   return (
     <>
-      {/* TOP BAR */}
-      <div
-        className="
-          fixed top-0 left-0 right-0 z-40
-          h-16 lg:h-20
-          bg-white/90 backdrop-blur-md
-          border-b border-slate-200
-          shadow-sm
-          flex items-center justify-between
-          px-5 sm:px-6 lg:px-10
-        "
-      >
+      {/* TOP BAR - Flattened classNames to prevent hydration error */}
+      <div className="fixed top-0 left-0 right-0 z-40 h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm flex items-center justify-between px-5 sm:px-6 lg:px-10">
         <div className="flex items-center gap-3">
-          <div
-            className="
-              h-9 w-9 lg:h-11 lg:w-11
-              bg-gradient-to-br from-blue-600 to-indigo-600
-              rounded-xl
-              flex items-center justify-center
-              shadow-md shadow-blue-200
-            "
-          >
+          <div className="h-9 w-9 lg:h-11 lg:w-11 bg-[#009688] rounded-xl flex items-center justify-center shadow-md shadow-teal-100">
             <Plus className="text-white" size={20} strokeWidth={3} />
           </div>
-
-          <span className="font-bold text-slate-900 tracking-tight text-lg lg:text-xl">
-            MedRefill
+          <span className="font-black text-slate-900 tracking-tighter text-lg lg:text-xl uppercase">
+            RefillCare
           </span>
         </div>
 
         <button
           onClick={() => setOpen(true)}
-          className="
-            p-2.5 lg:p-3
-            rounded-full
-            hover:bg-slate-100
-            transition-colors
-          "
+          className="p-2.5 lg:p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors"
         >
           <Menu size={24} className="text-slate-700" />
         </button>
@@ -102,92 +86,51 @@ export default function Sidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"
             onClick={() => setOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR DRAWER */}
+      {/* SIDEBAR */}
       <AnimatePresence>
         {open && (
           <motion.aside
-            initial={{ x: -300 }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: -300 }}
+            exit={{ x: "-100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            className="
-              fixed top-0 left-0 z-50
-              h-screen w-[18rem]
-              bg-[#F8FAFC]
-              border-r border-slate-200
-              flex flex-col
-              shadow-2xl
-            "
+            className="fixed top-0 left-0 z-[60] h-screen w-[18rem] sm:w-[20rem] bg-[#F8FAFC] border-r border-slate-200 flex flex-col shadow-2xl"
           >
-            {/* HEADER */}
+            {/* SIDEBAR HEADER */}
             <div className="h-20 px-8 flex items-center justify-between border-b border-slate-100">
               <Link
                 href="/dashboard"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 group"
+                className="flex items-center gap-3"
               >
-                <div
-                  className="
-                    h-10 w-10
-                    bg-blue-600
-                    rounded-[14px]
-                    flex items-center justify-center
-                    shadow-md
-                    transition-transform
-                    group-hover:rotate-12
-                  "
-                >
-                  <Plus className="text-white" size={22} strokeWidth={2.5} />
+                <div className="h-10 w-10 bg-[#009688] rounded-[14px] flex items-center justify-center">
+                  <Plus className="text-white" size={22} strokeWidth={3} />
                 </div>
-
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold text-slate-900 leading-none">
-                    MedRefill
-                  </span>
-                  <span
-                    className="
-                      text-[10px]
-                      font-bold
-                      text-blue-600
-                      tracking-[0.18em]
-                      uppercase
-                      mt-1
-                    "
-                  >
-                    Provider
-                  </span>
+                <div>
+                  <div className="text-lg font-black tracking-tighter uppercase leading-none">RefillCare</div>
+                  <div className="text-[9px] font-black text-[#009688] tracking-[0.18em] uppercase mt-1">
+                    Clinical Portal
+                  </div>
                 </div>
               </Link>
 
-              <button
+              <button 
                 onClick={() => setOpen(false)}
-                className="text-slate-400 hover:text-slate-700 transition"
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
               >
-                <X size={22} />
+                <X size={20} className="text-slate-400" />
               </button>
             </div>
 
-            {/* NAV */}
-            <div className="flex-1 px-4 py-6">
-              <p
-                className="
-                  px-4 mb-4
-                  text-[11px]
-                  font-bold
-                  text-slate-400
-                  uppercase
-                  tracking-[0.15em]
-                "
-              >
-                Main Menu
-              </p>
-
+            {/* NAV SECTION */}
+            <div className="flex-1 px-4 py-6 overflow-y-auto">
+              <p className="px-4 mb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Navigation</p>
               <nav className="space-y-1.5">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
@@ -196,103 +139,71 @@ export default function Sidebar() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className={`
-                        flex items-center gap-3
-                        px-4 py-3 rounded-xl
-                        font-medium
-                        transition-all duration-200
-                        ${
-                          isActive
-                            ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
-                            : "text-slate-600 hover:bg-white hover:text-blue-600 border border-transparent hover:border-slate-100 hover:shadow-sm"
-                        }
-                      `}
+                      className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 ${
+                        isActive
+                          ? "bg-white border border-slate-200 shadow-sm text-[#009688]"
+                          : "text-slate-500 hover:bg-white hover:text-slate-900"
+                      }`}
                     >
-                      <item.icon
-                        size={20}
-                        strokeWidth={isActive ? 2.5 : 2}
-                      />
-                      <span className="text-[15px]">{item.name}</span>
+                      <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                      <span className={`text-sm font-bold ${isActive ? "text-slate-900" : ""}`}>
+                        {item.name}
+                      </span>
                     </Link>
                   );
                 })}
               </nav>
 
-              {/* SUPPORT */}
-              <div className="mt-10">
-                <p
-                  className="
-                    px-4 mb-4
-                    text-[11px]
-                    font-bold
-                    text-slate-400
-                    uppercase
-                    tracking-[0.15em]
-                  "
+              <p className="px-4 mt-10 mb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Preferences</p>
+              <div className="space-y-1.5">
+                <Link
+                  href="/settings"
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
+                    pathname === "/settings" 
+                    ? "bg-white border border-slate-200 text-[#009688]" 
+                    : "text-slate-500 hover:bg-white"
+                  }`}
                 >
-                  Support
-                </p>
+                  <Settings size={18} />
+                  Settings
+                </Link>
 
-                <div className="space-y-1.5">
-                  <Link
-                    href="/settings"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:text-blue-600 rounded-xl transition-all border border-transparent hover:border-slate-100"
-                  >
-                    <Settings size={20} />
-                    Settings
-                  </Link>
+                <Link
+                  href="/notifications"
+                  onClick={() => {
+                    dispatch(acknowledgeNotifications());
+                    setOpen(false);
+                  }}
+                  className={`relative flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
+                    pathname === "/notifications" 
+                    ? "bg-white border border-slate-200 text-[#009688]" 
+                    : "text-slate-500 hover:bg-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Bell size={18} />
+                    Notifications
+                  </div>
 
-                  {/* 🔔 Notifications with Badge */}
-                  <Link
-                    href="/notifications"
-                    onClick={() => {
-                      setUnreadCount(0); // 🔥 clear badge immediately
-                      setOpen(false);
-                    }}
-                    className="relative flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-white hover:text-blue-600 rounded-xl transition-all border border-transparent hover:border-slate-100"
-                  >
-                    <Bell size={20} />
-                    <span>Notifications</span>
-
-                    {unreadCount > 0 && (
-                      <span
-                        className="
-                          absolute right-4
-                          min-w-[18px] h-[18px]
-                          px-1
-                          text-[11px] font-bold
-                          rounded-full
-                          bg-red-600 text-white
-                          flex items-center justify-center
-                        "
-                      >
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                </div>
+                  {unreadCount > acknowledgedCount && (
+                    <span className="min-w-[18px] h-[18px] px-1 text-[10px] font-black rounded-full bg-rose-600 text-white flex items-center justify-center animate-pulse">
+                      {unreadCount - acknowledgedCount}
+                    </span>
+                  )}
+                </Link>
               </div>
             </div>
 
             {/* FOOTER */}
-            <div className="p-4 border-t border-slate-100 bg-white">
+            <div className="p-4 border-t border-slate-100">
               {status === "authenticated" && (
                 <button
-                  onClick={() =>
-                    signOut({ redirect: true, callbackUrl: "/login" })
-                  }
-                  className="
-                    w-full flex items-center gap-3
-                    px-4 py-3 rounded-xl
-                    text-red-500 font-bold text-sm
-                    hover:bg-red-50
-                    transition-all
-                    active:scale-95
-                  "
+                  onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-slate-900 text-white rounded-[1.5rem] hover:bg-rose-600 transition-all duration-300"
                 >
-                  <LogOut size={18} strokeWidth={2.5} />
-                  Sign out
+                  <LogOut size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
                 </button>
               )}
             </div>

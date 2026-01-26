@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDb from "@/lib/db";
 import Notification from "@/models/notificationModel";
 import { getToken } from "next-auth/jwt";
+import "@/models/patientModel";
+import "@/models/medicineModel";
 
 export async function GET(req: NextRequest) {
   await connectDb();
