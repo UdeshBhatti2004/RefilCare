@@ -43,7 +43,15 @@ export async function POST(req: NextRequest) {
       phone,
     });
 
-    return NextResponse.json(patient.toObject(), { status: 201 });
+    // Generate Telegram link
+    const botUsername = process.env.TELEGRAM_BOT_USERNAME || "your_bot"; // Add this to .env
+    const telegramLink = `https://t.me/${botUsername}?start=${patient._id}`;
+
+    return NextResponse.json({
+      patient: patient.toObject(),
+      telegramLink, // ← NEW: Return the link
+      message: "Patient created successfully. Share the Telegram link with them to enable reminders.",
+    }, { status: 201 });
   } catch (error) {
     console.error("POST patient error", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });

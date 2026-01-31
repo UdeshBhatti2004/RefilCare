@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 export interface PatientT {
   pharmacyId: mongoose.Types.ObjectId;
   name: string;
-  phone: string; // stored as 91XXXXXXXXXX
+  phone: string;
+  telegramChatId?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -24,26 +25,20 @@ const PatientSchema = new mongoose.Schema<PatientT>(
       type: String,
       required: true,
       trim: true,
-      match: [/^[1-9][0-9]{9,14}$/, "Invalid WhatsApp phone number"],
+      match: [/^[1-9][0-9]{9,14}$/, "Invalid phone number"],
     },
+    telegramChatId: {
+      type: String,
+      default: null,
+    }, 
   },
   { timestamps: true },
 );
 
-/**
- * 🔥 Auto-normalize phone number
- * Converts:
- *  - +91 7990496002
- *  - 7990496002
- * Into:
- *  - 917990496002
- */
 PatientSchema.pre("save", async function () {
   if (!this.isModified("phone")) return;
 
-  let phone = this.phone.replace(/\D/g, ""); // remove spaces, +, -
-
-  // If 10-digit Indian number → prefix 91
+  let phone = this.phone.replace(/\D/g, ""); 
   if (phone.length === 10) {
     phone = `91${phone}`;
   }

@@ -3,72 +3,7 @@ import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import Notification from "@/models/notificationModel";
 import Patient from "@/models/patientModel";
-import axios from "axios";
-
-const TOKEN = process.env.WHATSAPP_TOKEN!;
-const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID!;
-
-// Format phone number with country code
-function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, "");
-  if (!cleaned.startsWith("91") && cleaned.length === 10) {
-    return "91" + cleaned;
-  }
-  return cleaned;
-}
-
-// Send WhatsApp template message
-async function sendMedicineRefillReminder(
-  to: string,
-  patientName: string,
-  medicineName: string,
-) {
-  const url = `https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`;
-
-  try {
-    const response = await axios.post(
-      url,
-      {
-        messaging_product: "whatsapp",
-        to,
-        type: "template",
-        template: {
-          name: "medicine_refill_reminder",
-          language: {
-            code: "en_US",
-          },
-          components: [
-            {
-              type: "body",
-              parameters: [
-                {
-                  type: "text",
-                  text: patientName,
-                },
-                {
-                  type: "text",
-                  text: medicineName,
-                },
-              ],
-            },
-          ],
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    console.log("✅ WhatsApp message sent:", response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error("❌ WhatsApp Error:", error.response?.data);
-    throw error;
-  }
-}
+import { sendTelegramMessage } from "@/lib/telegram";
 
 export async function GET(req: NextRequest) {
   // 🔐 Protect cron
@@ -81,30 +16,32 @@ export async function GET(req: NextRequest) {
 
   await connectDb();
 
-  const now = new Date();
+  // Get today's date range (local timezone)
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
 
-  // Find all active medicines
-  const allMedicines = await Medicine.find({ status: "active" });
-
-  // Filter for today's refills
-  const medicinesDueToday = allMedicines.filter((med) => {
-    const refillDate = new Date(med.refillDate);
-    return (
-      refillDate.getFullYear() === now.getFullYear() &&
-      refillDate.getMonth() === now.getMonth() &&
-      refillDate.getDate() === now.getDate()
-    );
+  // Find medicines due TODAY
+  const medicinesDueToday = await Medicine.find({
+    status: "active",
+    refillDate: {
+      $gte: start,
+      $lte: end,
+    },
   });
 
   console.log(`📅 Found ${medicinesDueToday.length} medicines due today`);
 
   let sent = 0;
+  let skipped = 0;
   const results: any[] = [];
 
   for (const med of medicinesDueToday) {
     try {
       // Check if notification sent in last hour
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       const recentNotification = await Notification.findOne({
         pharmacyId: med.pharmacyId,
         medicineId: med._id,
@@ -113,6 +50,7 @@ export async function GET(req: NextRequest) {
       });
 
       if (recentNotification) {
+        skipped++;
         results.push({
           medicine: med.medicineName,
           status: "⏭️ Skipped - already sent in last hour",
@@ -120,24 +58,31 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
+      // Get patient
       const patient = await Patient.findById(med.patientId);
-
-      if (!patient?.phone) {
+      
+      if (!patient) {
         results.push({
           medicine: med.medicineName,
-          status: "⚠️ Skipped - no phone number",
+          status: "⚠️ Patient not found",
         });
         continue;
       }
 
-      const formattedPhone = formatPhoneNumber(patient.phone);
+      // Check if patient linked to Telegram
+      if (!patient.telegramChatId) {
+        results.push({
+          medicine: med.medicineName,
+          patient: patient.name,
+          status: "⚠️ Patient not linked to Telegram",
+        });
+        continue;
+      }
 
-      // Send WhatsApp template message
-      await sendMedicineRefillReminder(
-        formattedPhone,
-        patient.name,
-        med.medicineName,
-      );
+      // Send Telegram message
+      const message = `🔔 <b>Medicine Refill Reminder</b>\n\nHello ${patient.name},\n\nYour medicine "<b>${med.medicineName}</b>" is due for refill today.\n\nPlease visit the pharmacy.\n\n📋 Condition: ${med.condition}\n💊 Dosage: ${med.dosagePerDay}/day`;
+      
+      await sendTelegramMessage(patient.telegramChatId, message);
 
       // Create notification in database
       await Notification.create({
@@ -148,32 +93,33 @@ export async function GET(req: NextRequest) {
         message: `Refill due today for ${med.medicineName}`,
         read: false,
       });
-
+      
       sent++;
       results.push({
         medicine: med.medicineName,
         patient: patient.name,
-        phone: formattedPhone,
-        status: "✅ Message sent successfully",
+        status: "✅ Telegram message sent",
       });
+      
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error?.message || error.message;
       results.push({
         medicine: med.medicineName,
-        status: "❌ Failed",
-        error: errorMsg,
+        status: "❌ Error",
+        error: error.message,
       });
+      console.error(`Error sending reminder for ${med.medicineName}:`, error);
     }
   }
 
-  console.log(`📊 Summary: ${sent}/${medicinesDueToday.length} messages sent`);
+  console.log(`📊 Summary: ${sent} sent, ${skipped} skipped`);
 
   return NextResponse.json({
     success: true,
     message: "Today refill cron executed",
     messagesSent: sent,
+    messagesSkipped: skipped,
     totalDueToday: medicinesDueToday.length,
-    timestamp: now.toISOString(),
+    timestamp: new Date().toISOString(),
     results,
   });
 }
