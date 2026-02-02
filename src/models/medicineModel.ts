@@ -15,6 +15,9 @@ export interface MedicineT {
   refillDate: Date;
 
   status: "active" | "refilled" | "stopped";
+  lastReminderSentAt: Date;
+  deleted: Boolean;
+  deletedAt: Date;
 
   createdAt?: Date;
   updatedAt?: Date;
@@ -73,9 +76,25 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
       enum: ["active", "missed", "refilled", "stopped"],
       default: "active",
     },
+    lastReminderSentAt: {
+      type: Date,
+      default: null,
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+    },
   },
   { timestamps: true },
 );
+
+// 👇 ADD THESE INDEXES 👇
+MedicineSchema.index({ pharmacyId: 1, deleted: 1, createdAt: -1 });
+MedicineSchema.index({ pharmacyId: 1, refillDate: 1 });
+MedicineSchema.index({ patientId: 1 });
 
 const Medicine =
   mongoose.models.Medicine ||

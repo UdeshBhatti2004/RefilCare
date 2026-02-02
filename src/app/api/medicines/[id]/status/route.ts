@@ -1,3 +1,4 @@
+// src/app/api/medicines/[id]/route.ts
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import RefillLog from "@/models/refillLogModel";
@@ -20,8 +21,9 @@ export async function PATCH(
     }
 
     const { id } = await context.params;
-    const { action } = await req.json(); 
-    // action: "refill" | "stop" | "resume"
+    const { action } = await req.json(); // refill | stop | resume
+
+    console.log("🩺 PATCH medicine", { id, action });
 
     const medicine = await Medicine.findOne({
       _id: id,
@@ -36,8 +38,17 @@ export async function PATCH(
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0); // ✅ UTC FIX
 
+    // 🔐 Safety check
+    if (!medicine.dosagePerDay || medicine.dosagePerDay <= 0) {
+      return NextResponse.json(
+        { message: "Invalid dosage per day" },
+        { status: 400 }
+      );
+    }
+
+    // ---------------- REFILL ----------------
     if (action === "refill") {
       if (medicine.status === "stopped") {
         return NextResponse.json(
@@ -51,7 +62,7 @@ export async function PATCH(
       );
 
       const newRefillDate = new Date(today);
-      newRefillDate.setDate(today.getDate() + days);
+      newRefillDate.setUTCDate(today.getUTCDate() + days);
 
       await RefillLog.create({
         pharmacyId: token.pharmacyId,
@@ -65,17 +76,22 @@ export async function PATCH(
       medicine.status = "active";
       await medicine.save();
 
+      console.log("✅ Refill logged");
+
       return NextResponse.json(medicine);
     }
 
-   
+    // ---------------- STOP ----------------
     if (action === "stop") {
       medicine.status = "stopped";
       await medicine.save();
+
+      console.log("⛔ Medicine stopped");
+
       return NextResponse.json(medicine);
     }
 
-    
+    // ---------------- RESUME ----------------
     if (action === "resume") {
       if (medicine.status !== "stopped") {
         return NextResponse.json(
@@ -89,11 +105,13 @@ export async function PATCH(
       );
 
       const newRefillDate = new Date(today);
-      newRefillDate.setDate(today.getDate() + days);
+      newRefillDate.setUTCDate(today.getUTCDate() + days);
 
       medicine.refillDate = newRefillDate;
       medicine.status = "active";
       await medicine.save();
+
+      console.log("▶️ Medicine resumed");
 
       return NextResponse.json(medicine);
     }
@@ -103,7 +121,7 @@ export async function PATCH(
       { status: 400 }
     );
   } catch (error) {
-    console.error("PATCH medicine error", error);
+    console.error("❌ PATCH medicine error", error);
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

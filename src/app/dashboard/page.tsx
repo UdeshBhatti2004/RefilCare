@@ -27,43 +27,71 @@ export default function DashboardPage() {
   const [cronLoading, setCronLoading] = useState(false);
 
   useEffect(() => {
-    if (!session) return;
+  if (!session) {
+    console.log("⏳ Waiting for session...");
+    return;
+  }
 
-    api
-      .get("/dashboard/summary")
-      .then((res) => {
-        setTodayCount(res.data.today);
-        setUpcomingCount(res.data.upcoming);
-        setMissedCount(res.data.missed);
-      })
-      .catch(() => {});
+  console.log("✅ Session found:", session);
+  console.log("1️⃣ Fetching dashboard summary...");
+  
+  api
+    .get("/dashboard/summary")
+    .then((res) => {
+      console.log("2️⃣ Summary response:", res.data);
+      setTodayCount(res.data.today);
+      setUpcomingCount(res.data.upcoming);
+      setMissedCount(res.data.missed);
+    })
+    .catch((err) => {
+      console.error("❌ Summary error:", err.response?.data || err.message);
+    });
 
-    api
-      .get("/dashboard/activity")
-      .then((res) => setActivity(res.data))
-      .catch(() => {});
-  }, [session]);
+  console.log("3️⃣ Fetching dashboard activity...");
+  api
+    .get("/dashboard/activity")
+    .then((res) => {
+      console.log("4️⃣ Activity response:", res.data);
+      setActivity(res.data);
+    })
+    .catch((err) => {
+      console.error("❌ Activity error:", err.response?.data || err.message);
+    });
+}, [session]); // ✅ Re-run when session changes
 
   async function runCron() {
     try {
       setCronLoading(true);
 
-      const res = await fetch("/api/cron/today-refils", {
+      const todayRes = await fetch("/api/cron/today-refils", {
         method: "GET",
         headers: {
-          "x-cron-key": "dev-cron-key", // dev only
+          "x-cron-key": "dev-cron-key",
         },
       });
 
-      if (!res.ok) {
-        throw new Error("Cron failed");
+      if (!todayRes.ok) {
+        throw new Error("Today refill cron failed");
       }
 
-      const data = await res.json();
+      const todayData = await todayRes.json();
+
+      const missedRes = await fetch("/api/cron/mark-missed", {
+        method: "GET",
+        headers: {
+          "x-cron-key": "dev-cron-key",
+        },
+      });
+
+      if (!missedRes.ok) {
+        throw new Error("Missed refill cron failed");
+      }
+
+      const missedData = await missedRes.json();
 
       alert(
-        `Today Refill Cron Executed ✅\n\n` +
-          `📲 WhatsApp reminders sent: ${data.remindersSent ?? 0}`,
+        "Cron executed successfully.\n\n" +
+        "Check logs and Telegram for actual results."
       );
     } catch (error) {
       console.error(error);
@@ -76,7 +104,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 sm:p-8 lg:p-12 font-sans text-slate-900">
       <div className="max-w-[1400px] mx-auto space-y-10">
-        {/* HEADER SECTION */}
+        
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -104,7 +132,6 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* ANALYTICS CARDS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
@@ -168,7 +195,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* RECENT ACTIVITY TABLE */}
+         
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -228,7 +255,7 @@ export default function DashboardPage() {
             )}
           </motion.div>
 
-          {/* SIDEBAR: DEV TOOLS & INSIGHTS */}
+          
           <div className="lg:col-span-4 space-y-6">
             {process.env.NODE_ENV === "development" && (
               <motion.div

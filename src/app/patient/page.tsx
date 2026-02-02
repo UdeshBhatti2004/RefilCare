@@ -46,7 +46,7 @@ export default function PatientsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* HEADER SECTION */}
+    
       <div className=" border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-[1400px] mx-auto px-6 py-6 lg:py-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -60,7 +60,7 @@ export default function PatientsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              {/* Search Bar */}
+              
               <div className="relative w-full sm:w-80 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#009688] transition-colors" size={18} />
                 <input
@@ -72,7 +72,7 @@ export default function PatientsPage() {
                 />
               </div>
 
-              {/* Add Patient Button - Desktop */}
+              
               <Link href="/patient/create" className="hidden sm:flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-6 py-3.5 rounded-2xl transition-all active:scale-95 shadow-lg shadow-slate-200">
                 <Plus size={18} strokeWidth={3} />
                 <span className="text-[11px] font-black uppercase tracking-widest">Register Patient</span>
@@ -83,7 +83,7 @@ export default function PatientsPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto p-6 lg:p-10">
-        {/* Status Line */}
+        
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white border border-slate-200 px-4 py-1.5 rounded-full">
@@ -93,7 +93,7 @@ export default function PatientsPage() {
           <div className="h-px bg-slate-200 flex-1 mx-8 hidden xl:block" />
         </div>
 
-        {/* Patients Grid */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredPatients.map((patient) => (
@@ -137,14 +137,14 @@ export default function PatientsPage() {
                   </Link>
                 </div>
                 
-                {/* Subtle Background Icon Decor */}
+                
                 <User size={100} className="absolute -bottom-6 -right-6 text-slate-50/50 pointer-events-none group-hover:text-[#009688]/5 transition-colors" />
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
 
-        {/* Empty State */}
+        
         {filteredPatients.length === 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-32 bg-white border border-dashed border-slate-200 rounded-[3rem] mt-4">
              <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
@@ -159,7 +159,7 @@ export default function PatientsPage() {
         )}
       </div>
 
-      {/* Floating Add Button for Mobile */}
+      
       <Link 
         href="/patient/create"
         className="sm:hidden fixed bottom-8 right-8 h-16 w-16 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-2xl z-50 active:scale-90 transition-transform"

@@ -30,8 +30,8 @@ export async function GET(
     const medicine = await Medicine.findOne({
       _id: id,
       pharmacyId: token.pharmacyId,
-    }).populate("patientId", "name"); 
-    console.log(medicine)
+      deleted: { $ne: true }, // ✅ ignore deleted
+    }).populate("patientId", "name");
 
     if (!medicine) {
       return NextResponse.json(
@@ -67,10 +67,12 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    ///  Check medicine exists
+    console.log("🗑️ SOFT DELETE medicine:", id);
+
     const medicine = await Medicine.findOne({
       _id: id,
       pharmacyId: token.pharmacyId,
+      deleted: { $ne: true },
     });
 
     if (!medicine) {
@@ -80,28 +82,18 @@ export async function DELETE(
       );
     }
 
-    /// Check refill history
-    const hasRefills = await RefillLog.exists({
-      medicineId: medicine._id,
-    });
+    // ✅ SOFT DELETE
+    medicine.deleted = true;
+    medicine.deletedAt = new Date();
+    await medicine.save();
 
-    if (hasRefills) {
-      return NextResponse.json(
-        {
-          message:
-            "Cannot delete medicine with refill history. Stop it instead.",
-        },
-        { status: 400 }
-      );
-    }
-
-    await Medicine.deleteOne({ _id: medicine._id });
+    console.log("✅ Medicine soft-deleted");
 
     return NextResponse.json({
       message: "Medicine deleted successfully",
     });
   } catch (error) {
-    console.error("DELETE medicine error", error);
+    console.error("❌ DELETE medicine error", error);
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

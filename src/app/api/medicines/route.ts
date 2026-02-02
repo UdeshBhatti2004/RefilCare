@@ -11,49 +11,41 @@ function utcDay(date: Date) {
 
 export async function GET(req: NextRequest) {
   try {
+    console.log("1️⃣ START: Connecting to database...");
     await connectDb();
+    console.log("2️⃣ SUCCESS: Database connected");
 
+    console.log("3️⃣ START: Getting user token...");
     const token = await getToken({ req });
+    
     if (!token?.pharmacyId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const filter = searchParams.get("filter");
+    const pharmacyId = token.pharmacyId;
+    console.log("4️⃣ Pharmacy ID:", pharmacyId);
 
-    const today = utcDay(new Date());
-
-    // Added .populate() to exchange the ID for the actual Patient Name
-    let medicines = await Medicine.find({
-      pharmacyId: token.pharmacyId,
+    console.log("5️⃣ START: Fetching medicines (WITHOUT patient lookup)...");
+    
+    // Just get medicines - no patient lookup
+    const medicines = await Medicine.find({
+      pharmacyId: pharmacyId,
+      deleted: false,
     })
-      .populate("patientId", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .select("_id medicineName condition status refillDate patientId createdAt");
+    
+    console.log("6️⃣ SUCCESS: Found", medicines.length, "medicines");
 
-    if (filter) {
-      medicines = medicines.filter((m) => {
-        const refillDate = utcDay(new Date(m.refillDate));
-
-        if (filter === "today") {
-          return refillDate.getTime() === today.getTime();
-        }
-
-        if (filter === "upcoming") {
-          return refillDate.getTime() > today.getTime();
-        }
-
-        if (filter === "missed") {
-          return refillDate.getTime() < today.getTime();
-        }
-
-        return true;
-      });
-    }
-
+    console.log("7️⃣ ✅ SENDING RESPONSE");
     return NextResponse.json(medicines);
   } catch (error) {
-    console.error("GET medicines error", error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    console.error("❌ ERROR:", error);
+    return NextResponse.json(
+      { message: "Server error", error: String(error) },
+      { status: 500 }
+    );
   }
 }
 
@@ -67,7 +59,6 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-
     const {
       patientId,
       medicineName,
@@ -77,30 +68,42 @@ export async function POST(req: NextRequest) {
       startDate,
     } = body;
 
-    // calculate refill date
+    if (
+      !patientId ||
+      !medicineName ||
+      !condition ||
+      !dosagePerDay ||
+      !tabletsGiven ||
+      !startDate
+    ) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
     const refillDate = new Date(startDate);
-    const days = Math.floor(tabletsGiven / dosagePerDay);
-    refillDate.setDate(refillDate.getDate() + days);
+    const daysSupply = Math.floor(tabletsGiven / dosagePerDay);
+    refillDate.setDate(refillDate.getDate() + daysSupply);
 
     const medicine = await Medicine.create({
       pharmacyId: token.pharmacyId,
       patientId,
-
       medicineName,
       condition,
-
       dosagePerDay,
       tabletsGiven,
-
       startDate,
       refillDate,
-
       status: "active",
     });
 
     return NextResponse.json(medicine, { status: 201 });
   } catch (error) {
-    console.error("POST medicine error", error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    console.error("Error creating medicine:", error);
+    return NextResponse.json(
+      { message: "Server error" },
+      { status: 500 }
+    );
   }
 }
