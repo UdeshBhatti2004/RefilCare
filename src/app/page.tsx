@@ -1,11 +1,5 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-function page() {
-  return (
-    <div>
-      Hello
-    </div>
-  )
+export default function Home() {
+  redirect("/dashboard");
 }
-
-export default page

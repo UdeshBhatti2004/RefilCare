@@ -3,7 +3,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Pill,
   User,
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   RefreshCw,
   ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,20 +41,13 @@ export default function NewMedicinePage() {
 
   useEffect(() => {
     axios.get("/api/patients").then((res) => {
-      setPatients(res.data);
+      setPatients(Array.isArray(res.data) ? res.data : []);
     });
   }, []);
 
   const handleSubmit = async () => {
-    if (
-      !patientId ||
-      !medicineName ||
-      !condition ||
-      !dosagePerDay ||
-      !tabletsGiven ||
-      !startDate
-    ) {
-      toast.error("Please fill all fields");
+    if (!patientId || !medicineName || !condition || !dosagePerDay || !tabletsGiven || !startDate) {
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -61,94 +55,84 @@ export default function NewMedicinePage() {
       setLoading(true);
       await axios.post("/api/medicines", {
         patientId,
-        medicineName:
-          condition === "Other"
-            ? `${medicineName} (${otherCondition})`
-            : medicineName,
+        medicineName: condition === "Other" ? `${medicineName} (${otherCondition})` : medicineName,
         condition,
         dosagePerDay: Number(dosagePerDay),
         tabletsGiven: Number(tabletsGiven),
         startDate,
       });
 
-      toast.success("Medicine created successfully");
+      toast.success("Medicine protocol established");
       router.push("/dashboard");
     } catch {
-      toast.error("Failed to create medicine");
+      toast.error("Failed to commit record");
     } finally {
       setLoading(false);
     }
   };
 
-  const estimatedDays =
-    dosagePerDay && tabletsGiven
-      ? Math.floor(Number(tabletsGiven) / Number(dosagePerDay))
-      : 0;
+  const estimatedDays = dosagePerDay && tabletsGiven 
+    ? Math.floor(Number(tabletsGiven) / Number(dosagePerDay)) 
+    : 0;
 
   return (
-    <div className="h-screen bg-[#F8FAFC] font-sans text-slate-900 flex flex-col overflow-hidden">
-      {/* TOP NAVIGATION */}
-      <div className="w-full shrink-0">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 flex flex-col">
+      <div className="w-full bg-white/50 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-[11px] font-black text-slate-500 hover:text-[#009688] transition-colors tracking-widest"
+            className="flex items-center gap-2 text-[10px] sm:text-[11px] font-black text-slate-500 hover:text-[#009688] transition-colors tracking-widest"
           >
             <ChevronLeft size={16} /> BACK
           </button>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full shadow-sm">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <ShieldCheck size={12} className="text-[#009688]" />
-            <span className="text-[10px] font-black text-slate-500 uppercase">
-              Clinical Entry Mode
+            <span className="text-[9px] sm:text-[10px] font-black text-slate-500 uppercase tracking-tighter">
+              Clinical Entry
             </span>
           </div>
         </div>
       </div>
 
-      {/* MAIN VIEWPORT */}
-      <main className="flex-1 max-w-[1600px] mx-auto px-4 sm:px-8 pb-6 w-full overflow-hidden">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-0 sm:px-8 py-0 sm:py-10">
         <motion.div
-          initial={{ opacity: 0, scale: 0.99 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-stretch"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-0 sm:gap-10"
         >
-          {/* LEFT: FORM */}
-          <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
-            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-6 sm:p-10 flex flex-col h-full shadow-sm">
-              <div className="flex items-center gap-4 mb-10 shrink-0">
-                <div className="p-3 rounded-2xl bg-[#009688]/10 text-[#009688]">
-                  <Pill size={28} />
+          <div className="lg:col-span-8">
+            <div className="bg-white border-b sm:border border-slate-200 rounded-none sm:rounded-[3rem] p-6 sm:p-12 shadow-sm">
+              <div className="flex items-center gap-4 mb-10">
+                <div className="p-3 sm:p-4 rounded-2xl bg-[#009688]/10 text-[#009688]">
+                  <Pill size={28} className="sm:w-8 sm:h-8" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
-                    Add New Medicine
+                  <h1 className="text-xl sm:text-3xl font-black text-slate-900 uppercase tracking-tighter">
+                    Medication Protocol
                   </h1>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Digital Medical Authentication
+                  <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Authorized Prescription Entry
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-10 flex-1 overflow-y-auto pr-2">
-                {/* Patient */}
-                <div className="space-y-6">
-                  <p className="text-[10px] font-black text-[#009688] uppercase tracking-[0.2em] flex items-center gap-2">
-                    <User size={14} /> 01. Patient Identification
+              <div className="space-y-12">
+                <section className="space-y-6">
+                  <p className="text-[10px] font-black text-[#009688] uppercase tracking-[0.2em] flex items-center gap-2 border-b border-teal-50 pb-2">
+                    <User size={14} /> 01. Patient & Medicine
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                     <div className="md:col-span-2">
                       <select
                         value={patientId}
                         onChange={(e) => setPatientId(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688] transition-colors appearance-none"
                       >
-                        <option value="">Search Patient Registry...</option>
+                        <option value="">Select Patient Registry...</option>
                         {patients.map((p) => (
-                          <option key={p._id} value={p._id}>
-                            {p.name}
-                          </option>
+                          <option key={p._id} value={p._id}>{p.name}</option>
                         ))}
                       </select>
                     </div>
@@ -158,124 +142,131 @@ export default function NewMedicinePage() {
                       placeholder="MEDICINE NAME"
                       value={medicineName}
                       onChange={(e) => setMedicineName(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688] transition-colors"
                     />
 
                     <select
                       value={condition}
-                      onChange={(e) =>
-                        setCondition(e.target.value as Condition)
-                      }
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none"
+                      onChange={(e) => setCondition(e.target.value as Condition)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688] transition-colors appearance-none"
                     >
                       <option value="">DIAGNOSIS CATEGORY</option>
                       <option value="BP">Blood Pressure</option>
                       <option value="Diabetes">Diabetes</option>
                       <option value="Thyroid">Thyroid</option>
-                      <option value="Other">Other</option>
+                      <option value="Other">Other Condition</option>
                     </select>
-                  </div>
-                </div>
 
-                {/* Dosage */}
-                <div className="space-y-6">
-                  <p className="text-[10px] font-black text-[#009688] uppercase tracking-[0.2em] flex items-center gap-2">
-                    <ClipboardList size={14} /> 02. Pharmacological Details
+                    <AnimatePresence>
+                      {condition === "Other" && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="md:col-span-2 overflow-hidden"
+                        >
+                          <input
+                            type="text"
+                            placeholder="SPECIFY CONDITION"
+                            value={otherCondition}
+                            onChange={(e) => setOtherCondition(e.target.value)}
+                            className="w-full bg-teal-50/30 border border-teal-100 rounded-xl sm:rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688]"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </section>
+
+                <section className="space-y-6">
+                  <p className="text-[10px] font-black text-[#009688] uppercase tracking-[0.2em] flex items-center gap-2 border-b border-teal-50 pb-2">
+                    <ClipboardList size={14} /> 02. Dosage & Inventory
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Daily Units */}
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Dosage per day"
-                      value={dosagePerDay}
-                      onChange={(e) => {
-                        if (/^\d*$/.test(e.target.value)) {
-                          setDosagePerDay(e.target.value);
-                        }
-                      }}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Daily Dosage</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={dosagePerDay}
+                        onChange={(e) => setDosagePerDay(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688]"
+                      />
+                    </div>
 
-                    {/* Total Quantity */}
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Tablets Given"
-                      pattern="[0-9]*"
-                      value={tabletsGiven}
-                      onChange={(e) => {
-                        if (/^\d*$/.test(e.target.value)) {
-                          setTabletsGiven(e.target.value);
-                        }
-                      }}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none"
-                    />
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Tablets Issued</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={tabletsGiven}
+                        onChange={(e) => setTabletsGiven(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688]"
+                      />
+                    </div>
 
-                    {/* Start Date */}
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold outline-none text-slate-500 uppercase"
-                    />
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Start Date</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-4 text-sm font-bold outline-none focus:border-[#009688] uppercase"
+                      />
+                    </div>
                   </div>
-                </div>
+                </section>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: PROJECTION (UNCHANGED) */}
-          <div className="lg:col-span-4 flex flex-col h-full gap-6 overflow-hidden">
-            <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 flex flex-col justify-between relative overflow-hidden h-full shadow-2xl">
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-8">
+          <div className="lg:col-span-4 px-4 sm:px-0 py-8 sm:py-0">
+            <div className="bg-slate-900 text-white rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-10 flex flex-col h-full relative overflow-hidden shadow-2xl">
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-10">
                   <Activity size={16} className="text-[#009688]" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[#009688]">
-                    Calculation Logic
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#009688]">
+                    Live Computation
                   </span>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="bg-white/5 rounded-[2rem] p-8 border border-white/10 text-center">
+                <div className="flex-1 space-y-8">
+                  <div className="bg-white/5 rounded-[2.5rem] p-10 border border-white/10 text-center backdrop-blur-sm">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                      Prescription Span
+                      Supply Duration
                     </p>
-                    <p className="text-7xl font-black text-white tracking-tighter">
-                      {estimatedDays || "00"}
-                    </p>
-                    <p className="text-[10px] font-bold text-[#009688] uppercase mt-4">
-                      Calculated Days
-                    </p>
+                    <div className="flex items-baseline justify-center gap-2">
+                      <span className="text-7xl sm:text-8xl font-black tracking-tighter">
+                        {estimatedDays || "00"}
+                      </span>
+                      <span className="text-sm font-black text-[#009688] uppercase">Days</span>
+                    </div>
                   </div>
 
-                  <div className="p-5 bg-teal-950/30 rounded-2xl border border-teal-900/50">
-                    <p className="text-[10px] text-teal-100/60 leading-relaxed font-medium">
-                      Automated refill protocols will activate upon record
-                      commitment. Ensure data accuracy before finalization.
+                  <div className="flex gap-4 p-5 bg-teal-950/40 rounded-2xl border border-teal-900/50">
+                    <AlertCircle size={18} className="text-[#009688] shrink-0" />
+                    <p className="text-[10px] text-teal-100/70 leading-relaxed font-medium">
+                      Protocols are calculated based on supply duration. 
                     </p>
                   </div>
                 </div>
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="mt-10 w-full bg-[#009688] hover:bg-teal-500 text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-[0.98] shadow-lg shadow-teal-900/20"
+                >
+                  {loading ? (
+                    <RefreshCw className="animate-spin" size={18} />
+                  ) : (
+                    <>Commit Record <ArrowRight size={18} /></>
+                  )}
+                </button>
               </div>
 
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="relative z-10 mt-6 w-full bg-[#009688] hover:bg-teal-500 text-white py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 shrink-0"
-              >
-                {loading ? (
-                  <RefreshCw className="animate-spin" size={16} />
-                ) : (
-                  <>
-                    Create Medicine <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-
-              <div className="absolute -bottom-20 -right-20 opacity-10 pointer-events-none">
-                <Activity size={300} />
+              <div className="absolute -bottom-16 -right-16 opacity-[0.03] pointer-events-none">
+                <Activity size={320} />
               </div>
             </div>
           </div>

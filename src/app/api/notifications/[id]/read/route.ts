@@ -7,17 +7,11 @@ export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  await connectDb();
-
-  // ✅ getToken REQUIRES NextRequest
-  const token = await getToken({ req });
+  await connectDb();  const token = await getToken({ req });
 
   if (!token?.pharmacyId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // ✅ unwrap async params
-  const { id } = await context.params;
+  }  const { id } = await context.params;
 
   const notification = await Notification.findOneAndUpdate(
     {

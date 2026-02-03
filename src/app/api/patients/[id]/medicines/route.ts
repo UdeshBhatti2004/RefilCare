@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
-import { getToken } from "next-auth/jwt";
-
-// utility: normalize to UTC date (same as your existing logic)
-function utcDay(date: Date) {
+import { getToken } from "next-auth/jwt";function utcDay(date: Date) {
   return new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
   );
@@ -27,10 +24,7 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get("filter");
 
-    const today = utcDay(new Date());
-
-    // 🔒 CRITICAL FIX: patientId is enforced here
-    let medicines = await Medicine.find({
+    const today = utcDay(new Date());    let medicines = await Medicine.find({
       pharmacyId: token.pharmacyId,
       patientId: patientId,
     })

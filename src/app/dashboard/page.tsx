@@ -27,37 +27,30 @@ export default function DashboardPage() {
   const [cronLoading, setCronLoading] = useState(false);
 
   useEffect(() => {
-  if (!session) {
-    console.log("⏳ Waiting for session...");
-    return;
-  }
+    if (!session) {
+      return;
+    }
 
-  console.log("✅ Session found:", session);
-  console.log("1️⃣ Fetching dashboard summary...");
-  
-  api
-    .get("/dashboard/summary")
-    .then((res) => {
-      console.log("2️⃣ Summary response:", res.data);
-      setTodayCount(res.data.today);
-      setUpcomingCount(res.data.upcoming);
-      setMissedCount(res.data.missed);
-    })
-    .catch((err) => {
-      console.error("❌ Summary error:", err.response?.data || err.message);
-    });
+    api
+      .get("/dashboard/summary")
+      .then((res) => {
+        setTodayCount(res.data.today);
+        setUpcomingCount(res.data.upcoming);
+        setMissedCount(res.data.missed);
+      })
+      .catch((err) => {
+        console.error(" Summary error:", err.response?.data || err.message);
+      });
 
-  console.log("3️⃣ Fetching dashboard activity...");
-  api
-    .get("/dashboard/activity")
-    .then((res) => {
-      console.log("4️⃣ Activity response:", res.data);
-      setActivity(res.data);
-    })
-    .catch((err) => {
-      console.error("❌ Activity error:", err.response?.data || err.message);
-    });
-}, [session]); // ✅ Re-run when session changes
+    api
+      .get("/dashboard/activity")
+      .then((res) => {
+        setActivity(res.data);
+      })
+      .catch((err) => {
+        console.error(" Activity error:", err.response?.data || err.message);
+      });
+  }, [session]);
 
   async function runCron() {
     try {
@@ -91,7 +84,7 @@ export default function DashboardPage() {
 
       alert(
         "Cron executed successfully.\n\n" +
-        "Check logs and Telegram for actual results."
+          "Check logs and Telegram for actual results.",
       );
     } catch (error) {
       console.error(error);
@@ -104,7 +97,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 sm:p-8 lg:p-12 font-sans text-slate-900">
       <div className="max-w-[1400px] mx-auto space-y-10">
-        
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -195,7 +187,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-         
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -255,7 +246,6 @@ export default function DashboardPage() {
             )}
           </motion.div>
 
-          
           <div className="lg:col-span-4 space-y-6">
             {process.env.NODE_ENV === "development" && (
               <motion.div

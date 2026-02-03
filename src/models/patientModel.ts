@@ -7,6 +7,8 @@ export interface PatientT {
   telegramChatId?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  deleted?:Boolean,
+  deletedAt?:Date
 }
 
 const PatientSchema = new mongoose.Schema<PatientT>(
@@ -31,6 +33,13 @@ const PatientSchema = new mongoose.Schema<PatientT>(
       type: String,
       default: null,
     }, 
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+    },
   },
   { timestamps: true },
 );

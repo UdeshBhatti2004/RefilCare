@@ -50,7 +50,7 @@ export default function NotificationsList() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* List Header */}
+      
       <div className="flex items-center gap-2 mb-6 px-1 shrink-0">
         <div className="p-1.5 bg-[#009688]/10 rounded-lg text-[#009688]">
           <Bell size={14} />
@@ -61,7 +61,7 @@ export default function NotificationsList() {
         <div className="h-px flex-1 bg-slate-100" />
       </div>
 
-      {/* Scrollable Area - Controlled for clinical UI */}
+      
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
         <AnimatePresence mode="popLayout">
           {notifications.map((n: Notification, idx: number) => (
@@ -77,7 +77,7 @@ export default function NotificationsList() {
         </AnimatePresence>
       </div>
       
-      {/* Footer Info */}
+      
       <div className="mt-4 pt-4 border-t border-slate-50 shrink-0">
         <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] text-center">
           End of notification stream

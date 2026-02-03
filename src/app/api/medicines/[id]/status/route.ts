@@ -1,4 +1,3 @@
-// src/app/api/medicines/[id]/route.ts
 import connectDb from "@/lib/db";
 import Medicine from "@/models/medicineModel";
 import RefillLog from "@/models/refillLogModel";
@@ -7,7 +6,7 @@ import { getToken } from "next-auth/jwt";
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDb();
@@ -20,10 +19,8 @@ export async function PATCH(
       );
     }
 
-    const { id } = await context.params;
-    const { action } = await req.json(); // refill | stop | resume
-
-    console.log("🩺 PATCH medicine", { id, action });
+    const { id } = await params;
+    const { action } = await req.json();
 
     const medicine = await Medicine.findOne({
       _id: id,
@@ -37,10 +34,6 @@ export async function PATCH(
       );
     }
 
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0); // ✅ UTC FIX
-
-    // 🔐 Safety check
     if (!medicine.dosagePerDay || medicine.dosagePerDay <= 0) {
       return NextResponse.json(
         { message: "Invalid dosage per day" },
@@ -48,7 +41,9 @@ export async function PATCH(
       );
     }
 
-    // ---------------- REFILL ----------------
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
     if (action === "refill") {
       if (medicine.status === "stopped") {
         return NextResponse.json(
@@ -57,10 +52,7 @@ export async function PATCH(
         );
       }
 
-      const days = Math.floor(
-        medicine.tabletsGiven / medicine.dosagePerDay
-      );
-
+      const days = Math.floor(medicine.tabletsGiven / medicine.dosagePerDay);
       const newRefillDate = new Date(today);
       newRefillDate.setUTCDate(today.getUTCDate() + days);
 
@@ -76,22 +68,15 @@ export async function PATCH(
       medicine.status = "active";
       await medicine.save();
 
-      console.log("✅ Refill logged");
-
       return NextResponse.json(medicine);
     }
 
-    // ---------------- STOP ----------------
     if (action === "stop") {
       medicine.status = "stopped";
       await medicine.save();
-
-      console.log("⛔ Medicine stopped");
-
       return NextResponse.json(medicine);
     }
 
-    // ---------------- RESUME ----------------
     if (action === "resume") {
       if (medicine.status !== "stopped") {
         return NextResponse.json(
@@ -100,18 +85,13 @@ export async function PATCH(
         );
       }
 
-      const days = Math.floor(
-        medicine.tabletsGiven / medicine.dosagePerDay
-      );
-
+      const days = Math.floor(medicine.tabletsGiven / medicine.dosagePerDay);
       const newRefillDate = new Date(today);
       newRefillDate.setUTCDate(today.getUTCDate() + days);
 
       medicine.refillDate = newRefillDate;
       medicine.status = "active";
       await medicine.save();
-
-      console.log("▶️ Medicine resumed");
 
       return NextResponse.json(medicine);
     }
@@ -121,7 +101,7 @@ export async function PATCH(
       { status: 400 }
     );
   } catch (error) {
-    console.error("❌ PATCH medicine error", error);
+    console.error("PATCH medicine error", error);
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

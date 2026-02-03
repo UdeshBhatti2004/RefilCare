@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, 
   Plus, 
@@ -13,107 +13,103 @@ import {
   Phone, 
   Activity,
   ChevronRight
-} from "lucide-react"
+} from "lucide-react";
 
 type Patient = {
-  _id: string
-  name: string
-  phone: string
-}
+  _id: string;
+  name: string;
+  phone: string;
+};
 
 type Medicine = {
-  _id: string
-  medicineName: string
-  refillDate: string
-  status: string
-}
+  _id: string;
+  medicineName: string;
+  refillDate: string;
+  status: string;
+};
 
 export default function PatientDetailPage() {
-  const params = useParams()
-  const id = typeof params.id === "string" ? params.id : ""
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : "";
   
-  const [patient, setPatient] = useState<Patient | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [medicines, setMedicines] = useState<Medicine[]>([])
-  
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6 // Adjusted for single-screen fit
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [mounted, setMounted] = useState(false);
+  const itemsPerPage = 6;
 
   useEffect(() => {
-    if (!id) return
+    setMounted(true);
+    if (!id) return;
     const fetchData = async () => {
       try {
         const [pRes, mRes] = await Promise.all([
-  fetch(`/api/patients/${id}`),
-  fetch(`/api/patients/${id}/medicines`)
-        ])
-        if (!pRes.ok) throw new Error()
-        setPatient(await pRes.json())
-        setMedicines(await mRes.json())
+          fetch(`/api/patients/${id}`),
+          fetch(`/api/patients/${id}/medicines`)
+        ]);
+        if (!pRes.ok) throw new Error();
+        setPatient(await pRes.json());
+        setMedicines(await mRes.json());
       } catch {
-        setPatient(null)
+        setPatient(null);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchData()
-  }, [id])
+    };
+    fetchData();
+  }, [id]);
 
-  // Pagination Logic
-  const totalPages = Math.ceil(medicines.length / itemsPerPage)
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentMedicines = medicines.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(medicines.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentMedicines = medicines.slice(indexOfFirstItem, indexOfLastItem);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  if (loading) return (
+  if (!mounted || loading) return (
     <div className="h-screen w-full flex items-center justify-center bg-[#F8FAFC]">
       <div className="w-10 h-10 border-4 border-[#009688] border-t-transparent rounded-full animate-spin" />
     </div>
-  )
+  );
 
-  if (!patient) return <div className="h-screen flex items-center justify-center font-black text-slate-400 uppercase tracking-widest text-sm">Record Not Found</div>
+  if (!patient) return <div className="h-screen flex items-center justify-center font-black text-slate-400 uppercase tracking-widest text-sm">Record Not Found</div>;
 
   return (
-    <div className="h-screen w-full bg-[#F8FAFC] flex flex-col overflow-hidden font-sans text-slate-900">
+    <div className="min-h-screen lg:h-screen w-full bg-[#F8FAFC] flex flex-col overflow-x-hidden font-sans text-slate-900">
       
-      {/* NAVIGATION */}
       <nav className="shrink-0 w-full">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
-          <Link href="/patient" className="flex items-center gap-2 text-[11px] font-black text-slate-500 hover:text-[#009688] transition-colors tracking-widest uppercase">
+          <Link href="/patient" className="flex items-center gap-2 text-[10px] sm:text-[11px] font-black text-slate-500 hover:text-[#009688] transition-colors tracking-widest uppercase">
             <ChevronLeft size={16} /> Patients Registry
           </Link>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full shadow-sm">
+          <div className="hidden xs:flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full shadow-sm">
              <ShieldCheck size={12} className="text-[#009688]" />
              <span className="text-[10px] font-black text-slate-500 uppercase">Secure Clinical Archive</span>
           </div>
         </div>
       </nav>
 
-      {/* MAIN VIEWPORT */}
-      <main className="flex-1 max-w-[1600px] mx-auto px-4 sm:px-8 pb-6 w-full overflow-hidden flex flex-col lg:flex-row gap-6">
+      <main className="flex-1 max-w-[1600px] mx-auto px-4 sm:px-8 pb-6 w-full overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row gap-6">
         
-        {/* PROFILE SIDEBAR */}
         <aside className="w-full lg:w-80 xl:w-96 flex flex-col shrink-0">
           <motion.div 
             initial={{ opacity: 0, x: -10 }} 
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white border border-slate-200 rounded-[2.5rem] p-8 flex flex-col h-full shadow-sm"
+            className="bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col shadow-sm"
           >
             <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-[#009688] to-emerald-600 flex items-center justify-center text-white text-3xl font-black shadow-lg shadow-teal-100 mb-5 shrink-0 uppercase">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-gradient-to-br from-[#009688] to-emerald-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-black shadow-lg shadow-teal-100 mb-4 sm:mb-5 shrink-0 uppercase">
                 {patient.name.charAt(0)}
               </div>
-              <h1 className="text-xl font-black text-slate-900 leading-tight tracking-tighter uppercase">{patient.name}</h1>
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 leading-tight tracking-tighter uppercase break-words w-full">{patient.name}</h1>
               <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-teal-50 text-[#009688] rounded-full">
                 <Phone size={10} />
                 <span className="font-black text-[9px] tracking-widest">{patient.phone}</span>
               </div>
             </div>
 
-            <div className="mt-8 space-y-5 flex-1">
+            <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-5 flex-1">
               <div className="space-y-3">
                 <div className="flex justify-between items-center border-b border-slate-50 pb-2">
                   <span className="text-slate-400 text-[8px] font-black uppercase tracking-widest">UID Reference</span>
@@ -142,19 +138,19 @@ export default function PatientDetailPage() {
           </motion.div>
         </aside>
 
-        {/* PAGINATED RECORDS SECTION */}
-        <section className="flex-1 flex flex-col overflow-hidden">
-          <div className="bg-white border border-slate-200 rounded-[2.5rem] h-full flex flex-col shadow-sm">
+        <section className="flex-1 flex flex-col min-h-[400px] lg:h-full overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] h-full flex flex-col shadow-sm overflow-hidden">
             
-            <div className="p-8 pb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="p-6 sm:p-8 pb-4 flex flex-col xs:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full xs:w-auto">
                 <div className="p-2 rounded-xl bg-[#009688]/10 text-[#009688]">
                   <ClipboardList size={18} />
                 </div>
-                <h2 className="text-xs font-black text-slate-900 uppercase tracking-[0.15em]">Medication Ledger</h2>
+                <h2 className="text-[10px] sm:text-xs font-black text-slate-900 uppercase tracking-[0.15em]">Medication Ledger</h2>
               </div>
+              
               {totalPages > 1 && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                    <button 
                     disabled={currentPage === 1}
                     onClick={() => paginate(currentPage - 1)}
@@ -162,7 +158,7 @@ export default function PatientDetailPage() {
                    >
                     <ChevronLeft size={14} />
                    </button>
-                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter whitespace-nowrap">
                     Page {currentPage} <span className="mx-1 text-slate-200">/</span> {totalPages}
                    </span>
                    <button 
@@ -176,26 +172,26 @@ export default function PatientDetailPage() {
               )}
             </div>
 
-            {/* LIST AREA - No Scrollbar */}
-            <div className="flex-1 px-8 py-4 overflow-hidden">
+            <div className="flex-1 px-4 sm:px-8 py-4 overflow-y-auto lg:overflow-y-auto scrollbar-hide">
               {medicines.length > 0 ? (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 auto-rows-min">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 auto-rows-min">
                   <AnimatePresence mode="popLayout">
                     {currentMedicines.map((med, idx) => (
                       <motion.div
                         key={med._id}
+                        layout
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ delay: idx * 0.02 }}
-                        className="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex items-center justify-between group hover:border-[#009688]/30 hover:bg-white transition-all duration-300 shadow-sm"
+                        className="bg-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl p-4 sm:p-5 flex items-center justify-between group hover:border-[#009688]/30 hover:bg-white transition-all duration-300 shadow-sm"
                       >
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-white text-[#009688] flex items-center justify-center border border-slate-100 shadow-sm group-hover:bg-[#009688] group-hover:text-white transition-colors shrink-0">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white text-[#009688] flex items-center justify-center border border-slate-100 shadow-sm group-hover:bg-[#009688] group-hover:text-white transition-colors shrink-0">
                             <Pill size={18} />
                           </div>
-                          <div className="truncate">
-                            <h3 className="font-black text-slate-800 truncate uppercase tracking-tight text-[11px]">
+                          <div className="min-w-0 pr-2">
+                            <h3 className="font-black text-slate-800 truncate uppercase tracking-tight text-[10px] sm:text-[11px]">
                               {med.medicineName}
                             </h3>
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
@@ -203,7 +199,7 @@ export default function PatientDetailPage() {
                             </p>
                           </div>
                         </div>
-                        <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+                        <div className={`shrink-0 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
                           med.status.toLowerCase() === 'active' 
                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
                             : 'bg-rose-50 text-rose-600 border-rose-100'
@@ -215,19 +211,19 @@ export default function PatientDetailPage() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center opacity-30">
+                <div className="h-40 lg:h-full flex flex-col items-center justify-center opacity-30">
                   <Pill size={40} className="mb-2" />
                   <p className="text-[10px] font-black uppercase">No Active Data</p>
                 </div>
               )}
             </div>
 
-            <div className="p-6 text-center border-t border-slate-50">
-               <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">Total of {medicines.length} clinical entries found</p>
+            <div className="p-4 sm:p-6 text-center border-t border-slate-50 bg-white/50 backdrop-blur-sm">
+                <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] sm:tracking-[0.3em]">Total of {medicines.length} clinical entries found</p>
             </div>
           </div>
         </section>
       </main>
     </div>
-  )
+  );
 }

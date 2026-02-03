@@ -1,43 +1,99 @@
-import connectDb from "@/lib/db"
-import Patient from "@/models/patientModel"
-import { NextRequest, NextResponse } from "next/server"
-import { getToken } from "next-auth/jwt"
+import connectDb from "@/lib/db";
+import Patient from "@/models/patientModel";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import Medicine from "@/models/medicineModel";
 
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await connectDb()
+    await connectDb();
 
-    const token = await getToken({ req })
+    const token = await getToken({ req });
     if (!token?.pharmacyId) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await context.params
+    const { id } = await params;
 
     const patient = await Patient.findOne({
       _id: id,
       pharmacyId: token.pharmacyId,
-    })
+    });
 
     if (!patient) {
       return NextResponse.json(
         { message: "Patient not found" },
-        { status: 404 }
-      )
+        { status: 404 },
+      );
     }
 
-    return NextResponse.json(patient.toObject())
+    return NextResponse.json(patient.toObject());
   } catch (error) {
-    console.error("GET patient by id error", error)
+    console.error("GET patient by id error", error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDb();
+
+    const token = await getToken({ req });
+
+    if (!token?.pharmacyId) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const patient = await Patient.findById(id);
+
+    if (!patient) {
+      return NextResponse.json(
+        { message: "Patient not found" },
+        { status: 404 },
+      );
+    }
+    if (patient.pharmacyId.toString() !== token.pharmacyId.toString()) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    }
+    if (patient.deleted) {
+      return NextResponse.json(
+        { message: "Patient already deleted" },
+        { status: 400 },
+      );
+    }
+
+    patient.deleted = true;
+    patient.deletedAt = new Date();
+    await patient.save();
+
+    const medicinesResult = await Medicine.updateMany(
+      {
+        patientId: id,
+        deleted: { $ne: true },
+      },
+      {
+        deleted: true,
+        deletedAt: new Date(),
+      },
+    );
+
+    return NextResponse.json({
+      message: "Patient deleted successfully",
+      medicinesDeleted: medicinesResult.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Delete patient error:", error);
     return NextResponse.json(
-      { message: "Server error" },
-      { status: 500 }
-    )
+      { message: "Server error", error: String(error) },
+      { status: 500 },
+    );
   }
 }

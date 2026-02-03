@@ -89,10 +89,7 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
     },
   },
   { timestamps: true },
-);
-
-// 👇 ADD THESE INDEXES 👇
-MedicineSchema.index({ pharmacyId: 1, deleted: 1, createdAt: -1 });
+);MedicineSchema.index({ pharmacyId: 1, deleted: 1, createdAt: -1 });
 MedicineSchema.index({ pharmacyId: 1, refillDate: 1 });
 MedicineSchema.index({ patientId: 1 });
 

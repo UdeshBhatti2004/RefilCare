@@ -16,14 +16,9 @@ const initialState: NotificationState = {
 const notificationSlice = createSlice({
   name: "notification",
   initialState,
-  reducers: {
-    // Backend truth ONLY
-    setUnreadCount(state, action: PayloadAction<number>) {
+  reducers: {    setUnreadCount(state, action: PayloadAction<number>) {
       state.unreadCount = action.payload;
-    },
-
-    // User explicitly visited notifications
-    acknowledgeNotifications(state) {
+    },    acknowledgeNotifications(state) {
       state.acknowledgedCount = state.unreadCount;
 
       if (typeof window !== "undefined") {

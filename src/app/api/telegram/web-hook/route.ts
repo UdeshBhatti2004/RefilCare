@@ -3,10 +3,7 @@ import axios from "axios";
 import connectDb from "@/lib/db";
 import Patient from "@/models/patientModel";
 
-const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
-
-// ✅ helper function (THIS WAS MISSING)
-async function sendMessage(chatId: number, text: string) {
+const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;async function sendMessage(chatId: number, text: string) {
   await axios.post(`${TELEGRAM_API}/sendMessage`, {
     chat_id: chatId,
     text,
@@ -24,17 +21,11 @@ export async function POST(req: Request) {
   }
 
   const chatId = message.chat.id;
-  const text = message.text.trim();
-
-  // ✅ ALWAYS respond to /start
-  if (text.startsWith("/start")) {
-    const patientId = text.split(" ")[1];
-
-    // 🟡 CASE 1: /start WITHOUT patientId → guide user
-    if (!patientId) {
+  const text = message.text.trim();  if (text.startsWith("/start")) {
+    const patientId = text.split(" ")[1];    if (!patientId) {
       await sendMessage(
         chatId,
-        `👋 Welcome to RefillCare!
+        ` Welcome to RefillCare!
 
 To activate refill reminders, please open the link shared with you by your pharmacy.
 
@@ -42,15 +33,12 @@ Once you open that link, just tap START — that’s all 😊`
       );
 
       return NextResponse.json({ ok: true });
-    }
-
-    // 🟢 CASE 2: /start WITH patientId → link patient
-    const patient = await Patient.findById(patientId);
+    }    const patient = await Patient.findById(patientId);
 
     if (!patient) {
       await sendMessage(
         chatId,
-        "❌ This activation link is invalid or expired."
+        " This activation link is invalid or expired."
       );
       return NextResponse.json({ ok: true });
     }
@@ -60,7 +48,7 @@ Once you open that link, just tap START — that’s all 😊`
 
     await sendMessage(
       chatId,
-      `✅ Welcome ${patient.name}!
+      `Welcome ${patient.name}!
 
 You're now linked to RefillCare.
 You'll receive medicine refill reminders here.`

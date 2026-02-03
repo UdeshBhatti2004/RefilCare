@@ -2,19 +2,25 @@ import connectDb from "@/lib/db";
 import Patient from "@/models/patientModel";
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import Medicine from "@/models/medicineModel";
 
 export async function GET(req: NextRequest) {
   try {
+
     await connectDb();
 
     const token = await getToken({ req });
-    if (!token?.pharmacyId) {
+    if (!token?.pharmacyId){
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const patients = await Patient.find({
+        const patients = await Patient.find({
       pharmacyId: token.pharmacyId,
-    }).sort({ createdAt: -1 });
+      deleted: { $ne: true }, 
+    })
+      .sort({ createdAt: -1 })
+      .select("_id name phone createdAt"); 
+
 
     return NextResponse.json(patients.map(p => p.toObject()));
   } catch (error) {
@@ -41,15 +47,12 @@ export async function POST(req: NextRequest) {
       pharmacyId: token.pharmacyId,
       name,
       phone,
-    });
-
-    // Generate Telegram link
-    const botUsername = process.env.TELEGRAM_BOT_USERNAME || "your_bot"; // Add this to .env
+    });    const botUsername = process.env.TELEGRAM_BOT_USERNAME || "your_bot";
     const telegramLink = `https://t.me/${botUsername}?start=${patient._id}`;
 
     return NextResponse.json({
       patient: patient.toObject(),
-      telegramLink, // ← NEW: Return the link
+      telegramLink,
       message: "Patient created successfully. Share the Telegram link with them to enable reminders.",
     }, { status: 201 });
   } catch (error) {

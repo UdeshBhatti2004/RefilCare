@@ -4,24 +4,16 @@ import Medicine from "@/models/medicineModel";
 import Patient from "@/models/patientModel";
 import { sendTelegramMessage } from "@/lib/telegram";
 
-export async function POST(req: NextRequest) {
-  // 🔐 ALWAYS protect cron
-  const secret = req.headers.get("x-cron-secret");
+export async function POST(req: NextRequest) {  const secret = req.headers.get("x-cron-secret");
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  await connectDb();
-
-  // 📅 Get today's date range (keep as-is for now)
-  const start = new Date();
+  await connectDb();  const start = new Date();
   start.setHours(0, 0, 0, 0);
 
   const end = new Date();
-  end.setHours(23, 59, 59, 999);
-
-  // 🔍 Find medicines due TODAY (exclude deleted)
-  const medicinesDueToday = await Medicine.find({
+  end.setHours(23, 59, 59, 999);  const medicinesDueToday = await Medicine.find({
     status: "active",
     deleted: { $ne: true },
     refillDate: {
@@ -30,15 +22,13 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  console.log(`📅 Found ${medicinesDueToday.length} medicines due today`);
+
 
   let sent = 0;
   let skipped = 0;
 
   for (const med of medicinesDueToday) {
-    try {
-      // 🛑 Prevent duplicate reminder on same day
-      if (
+    try {      if (
         med.lastReminderSentAt &&
         med.lastReminderSentAt.toDateString() ===
           new Date().toDateString()
@@ -69,13 +59,13 @@ Thank you.`;
       sent++;
     } catch (error) {
       console.error(
-        `❌ Error sending reminder for ${med.medicineName}:`,
+        ` Error sending reminder for ${med.medicineName}:`,
         error
       );
     }
   }
 
-  console.log(`📊 Summary: ${sent} sent, ${skipped} skipped`);
+
 
   return NextResponse.json({
     ok: true,

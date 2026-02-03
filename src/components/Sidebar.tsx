@@ -60,7 +60,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* TOP BAR - Flattened classNames to prevent hydration error */}
+      
       <div className="fixed top-0 left-0 right-0 z-40 h-16 lg:h-20 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm flex items-center justify-between px-5 sm:px-6 lg:px-10">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 lg:h-11 lg:w-11 bg-[#009688] rounded-xl flex items-center justify-center shadow-md shadow-teal-100">
@@ -79,7 +79,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* OVERLAY */}
+      
       <AnimatePresence>
         {open && (
           <motion.div
@@ -92,7 +92,7 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR */}
+      
       <AnimatePresence>
         {open && (
           <motion.aside
@@ -102,7 +102,7 @@ export default function Sidebar() {
             transition={{ type: "spring", damping: 28, stiffness: 220 }}
             className="fixed top-0 left-0 z-[60] h-screen w-[18rem] sm:w-[20rem] bg-[#F8FAFC] border-r border-slate-200 flex flex-col shadow-2xl"
           >
-            {/* SIDEBAR HEADER */}
+            
             <div className="h-20 px-8 flex items-center justify-between border-b border-slate-100">
               <Link
                 href="/dashboard"
@@ -128,7 +128,7 @@ export default function Sidebar() {
               </button>
             </div>
 
-            {/* NAV SECTION */}
+            
             <div className="flex-1 px-4 py-6 overflow-y-auto">
               <p className="px-4 mb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Navigation</p>
               <nav className="space-y-1.5">
@@ -195,7 +195,7 @@ export default function Sidebar() {
               </div>
             </div>
 
-            {/* FOOTER */}
+            
             <div className="p-4 border-t border-slate-100">
               {status === "authenticated" && (
                 <button

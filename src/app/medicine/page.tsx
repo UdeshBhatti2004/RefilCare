@@ -49,21 +49,21 @@ export default function MedicinesPage() {
     const fetchMedicines = async () => {
       try {
         setLoading(true);
-        console.log("1️⃣ Fetching medicines from API...");
+
         const res = await axios.get("/api/medicines", { withCredentials: true });
-        console.log("2️⃣ Got medicines:", res.data.length);
+
         
        
         const patientIds = [...new Set(res.data.map((m: any) => m.patientId))];
-        console.log("3️⃣ Unique patient IDs:", patientIds.length);
+
         
        
-        console.log("4️⃣ Fetching patient names...");
+
         const patientsRes = await axios.post("/api/patients/batch", 
           { patientIds }, 
           { withCredentials: true }
         );
-        console.log("5️⃣ Got patients:", patientsRes.data.length);
+
         
         const patientMap = Object.fromEntries(
           patientsRes.data.map((p: any) => [p._id, p.name])
@@ -78,10 +78,10 @@ export default function MedicinesPage() {
           }
         }));
         
-        console.log("6️⃣ Setting medicines with patient names...");
+
         setMedicines(medicinesWithNames);
       } catch (err) {
-        console.error("❌ Failed to fetch medicines:", err);
+        console.error(" Failed to fetch medicines:", err);
         toast.error("Failed to load medicines");
         setMedicines([]);
       } finally {

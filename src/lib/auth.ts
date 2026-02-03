@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
           id: pharmacy._id.toString(),
           email: pharmacy.email,
           name: pharmacy.name,
-          pharmacyId: pharmacy._id.toString(), // 👈 IMPORTANT
+          pharmacyId: pharmacy._id.toString(), 
         };
       },
     }),
@@ -50,14 +50,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.pharmacyId = (user as any).pharmacyId; // 👈 STORE IN JWT
+        token.pharmacyId = (user as any).pharmacyId; 
       }
       return token;
     },
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.pharmacyId = token.pharmacyId as string; // 👈 EXPOSE TO CLIENT
+        session.user.pharmacyId = token.pharmacyId as string; 
       }
       return session;
     },

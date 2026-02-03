@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   return (
     <div className="h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden bg-white">
-      {/* LEFT SIDE */}
+      
       <motion.div
         initial={false}
         animate={{ opacity: 1, x: 0 }}

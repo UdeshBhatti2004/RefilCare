@@ -30,7 +30,7 @@ export async function GET(
     const medicine = await Medicine.findOne({
       _id: id,
       pharmacyId: token.pharmacyId,
-      deleted: { $ne: true }, // ✅ ignore deleted
+      deleted: { $ne: true }, 
     }).populate("patientId", "name");
 
     if (!medicine) {
@@ -51,6 +51,7 @@ export async function GET(
 }
 
 export async function DELETE(
+  
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -67,7 +68,7 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    console.log("🗑️ SOFT DELETE medicine:", id);
+
 
     const medicine = await Medicine.findOne({
       _id: id,
@@ -80,20 +81,17 @@ export async function DELETE(
         { message: "Medicine not found" },
         { status: 404 }
       );
-    }
-
-    // ✅ SOFT DELETE
-    medicine.deleted = true;
+    }    medicine.deleted = true;
     medicine.deletedAt = new Date();
     await medicine.save();
 
-    console.log("✅ Medicine soft-deleted");
+
 
     return NextResponse.json({
       message: "Medicine deleted successfully",
     });
   } catch (error) {
-    console.error("❌ DELETE medicine error", error);
+    console.error(" DELETE medicine error", error);
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

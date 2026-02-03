@@ -24,9 +24,7 @@ export default function Footer() {
   };
 
   return (
-    /* The combination of w-screen and negative margins (vw) 
-       forces the footer to break out of any parent containers.
-    */
+    
     <motion.footer
       initial="hidden"
       whileInView="visible"
@@ -34,7 +32,7 @@ export default function Footer() {
       variants={containerVariants}
       className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white border-t border-slate-100 overflow-hidden"
     >
-      {/* Edge-to-Edge Animated Accent Line */}
+      
       <motion.div 
         initial={{ scaleX: 0 }}
         whileInView={{ scaleX: 1 }}
@@ -42,11 +40,11 @@ export default function Footer() {
         className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#009688] to-transparent origin-center"
       />
 
-      {/* Increased padding for the ultra-wide look */}
+      
       <div className="w-full px-8 lg:px-20 py-12">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
           
-          {/* Brand Identity */}
+          
           <motion.div variants={itemVariants} className="flex flex-col gap-3 min-w-[200px]">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 bg-[#009688] rounded-xl flex items-center justify-center">
@@ -63,7 +61,7 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Central Quote (Wide spacing) */}
+          
           <motion.div variants={itemVariants} className="flex-1 flex justify-center lg:max-w-3xl">
             <div className="relative px-10 text-center">
               <span className="absolute -top-6 left-0 text-7xl text-[#009688]/10 font-serif leading-none">“</span>
@@ -76,7 +74,7 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Trust Pillars */}
+          
           <motion.div variants={itemVariants} className="flex flex-wrap justify-end gap-10 w-full lg:w-auto">
             {[
               { icon: ShieldCheck, label: "Security", sub: "AES-256 Encrypted" },
@@ -92,7 +90,7 @@ export default function Footer() {
           </motion.div>
         </div>
 
-        {/* Full Width Divider */}
+        
         <motion.div 
           variants={itemVariants}
           className="mt-16 pt-8 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-8"

@@ -16,13 +16,13 @@ function utcDay(date: Date) {
 
 export async function GET() {
   try {
-    console.log("1️⃣ Connecting to database...");
+
     await connectDb();
-    console.log("2️⃣ Database connected");
+
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.pharmacyId) {
-      console.log("3️⃣ No session/pharmacyId");
+
       return NextResponse.json({
         today: 0,
         upcoming: 0,
@@ -30,21 +30,15 @@ export async function GET() {
       });
     }
 
-    console.log("4️⃣ PharmacyId:", session.user.pharmacyId);
     const today = utcDay(new Date());
 
-    console.log("5️⃣ Fetching medicines...");
-    
-    // Fetch with optimizations
     const medicines = await Medicine.find({
       pharmacyId: session.user.pharmacyId,
       deleted: { $ne: true }
     })
-      .select("refillDate status") // Only get needed fields
-      .limit(1000) // Max 1000 medicines
-      .lean(); // Plain objects, faster
-
-    console.log("6️⃣ Found", medicines.length, "medicines");
+      .select("refillDate status") 
+      .limit(1000) 
+      .lean(); 
 
     let todayCount = 0;
     let upcomingCount = 0;
@@ -62,7 +56,6 @@ export async function GET() {
       }
     });
 
-    console.log("7️⃣ Counts - Today:", todayCount, "Upcoming:", upcomingCount, "Missed:", missedCount);
 
     return NextResponse.json({
       today: todayCount,
@@ -70,7 +63,7 @@ export async function GET() {
       missed: missedCount,
     });
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
     return NextResponse.json({
       today: 0,
       upcoming: 0,
