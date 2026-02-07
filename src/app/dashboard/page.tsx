@@ -52,47 +52,31 @@ export default function DashboardPage() {
       });
   }, [session]);
 
-  async function runCron() {
-    try {
-      setCronLoading(true);
+ async function runCron() {
+  try {
+    setCronLoading(true);
 
-      const todayRes = await fetch("/api/cron/today-refils", {
-        method: "GET",
-        headers: {
-          "x-cron-key": "dev-cron-key",
-        },
-      });
+    const res = await fetch("/api/dashboard/trigger-today-refils", {
+      method: "POST",
+      credentials: "include",
+    });
 
-      if (!todayRes.ok) {
-        throw new Error("Today refill cron failed");
-      }
-
-      const todayData = await todayRes.json();
-
-      const missedRes = await fetch("/api/cron/mark-missed", {
-        method: "GET",
-        headers: {
-          "x-cron-key": "dev-cron-key",
-        },
-      });
-
-      if (!missedRes.ok) {
-        throw new Error("Missed refill cron failed");
-      }
-
-      const missedData = await missedRes.json();
-
-      alert(
-        "Cron executed successfully.\n\n" +
-          "Check logs and Telegram for actual results.",
-      );
-    } catch (error) {
-      console.error(error);
-      alert("Cron execution failed");
-    } finally {
-      setCronLoading(false);
+    if (!res.ok) {
+      throw new Error("Cron execution failed");
     }
+
+    const data = await res.json();
+
+    alert(
+      "Cron executed successfully.\n\n" +
+        "Check logs and Telegram for actual results.",
+    );
+  } catch (error) {
+    alert("Cron execution failed");
+  } finally {
+    setCronLoading(false);
   }
+}
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 sm:p-8 lg:p-12 font-sans text-slate-900">

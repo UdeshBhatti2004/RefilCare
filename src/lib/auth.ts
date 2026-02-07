@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
           name: pharmacy.name,
           pharmacyId: pharmacy._id.toString(), 
         };
+        
       },
     }),
 
