@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getModels } from "@/lib/model";;
+import { getModels } from "@/lib/model";
 import { sendTelegramMessage } from "@/lib/telegram";
 
 export async function POST(req: NextRequest) {  const secret = req.headers.get("x-cron-secret");
