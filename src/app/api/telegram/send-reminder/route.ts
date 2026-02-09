@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
-import connectDb from "@/lib/db";
-import Patient from "@/models/patientModel";
+import { getModels } from "@/lib/model";
 
 export async function POST(req:NextRequest) {
-  await connectDb();
+  const { Patient } = await getModels();
 
   const { patientId, message } = await req.json();
 

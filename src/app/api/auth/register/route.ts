@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-
-import connectDb from "@/lib/db";
-import Pharmacy from "@/models/pharmacyModel";
+import { getModels } from "@/lib/model";
 
 export async function POST(req: Request) {
   const { name, email, password } = await req.json();
@@ -14,7 +12,7 @@ export async function POST(req: Request) {
     );
   }
 
-  await connectDb();
+  const { Pharmacy } = await getModels();
 
   const exists = await Pharmacy.findOne({ email });
   if (exists) {

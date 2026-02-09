@@ -1,6 +1,4 @@
-import connectDb from "@/lib/db";
-import Medicine from "@/models/medicineModel";
-import RefillLog from "@/models/refillLogModel";
+import { getModels } from "@/lib/model";
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
@@ -9,7 +7,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDb();
+    const { Medicine, RefillLog } = await getModels();
 
     const token = await getToken({ req });
     if (!token?.pharmacyId) {

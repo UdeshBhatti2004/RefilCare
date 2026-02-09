@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDb from "@/lib/db";
-import Notification from "@/models/notificationModel";
+import { getModels } from "@/lib/model";
 import { getToken } from "next-auth/jwt";
-import "@/models/patientModel";
-import "@/models/medicineModel";
 
-export async function GET(req: NextRequest) {
-  await connectDb();
+export async function GET(req:NextRequest) {
 
+  const { Notification } = await getModels();
+  
   const token = await getToken({ req });
   if (!token?.pharmacyId) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

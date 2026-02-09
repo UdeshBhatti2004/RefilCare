@@ -1,16 +1,15 @@
-import connectDb from "@/lib/db";
-import Patient from "@/models/patientModel";
+import { getModels } from "@/lib/model";
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import Medicine from "@/models/medicineModel";
+
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await connectDb();
-
+    const { Patient } = await getModels();
+    
     const token = await getToken({ req });
     if (!token?.pharmacyId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -42,7 +41,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await connectDb();
+    const { Patient, Medicine } = await getModels();
 
     const token = await getToken({ req });
 

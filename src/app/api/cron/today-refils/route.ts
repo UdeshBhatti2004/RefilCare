@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDb from "@/lib/db";
-import Medicine from "@/models/medicineModel";
-import Patient from "@/models/patientModel";
+import { getModels } from "@/lib/model";;
 import { sendTelegramMessage } from "@/lib/telegram";
 
 export async function POST(req: NextRequest) {  const secret = req.headers.get("x-cron-secret");
@@ -9,7 +7,9 @@ export async function POST(req: NextRequest) {  const secret = req.headers.get("
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  await connectDb();  const start = new Date();
+    const { Medicine, Patient } = await getModels();
+
+   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
   const end = new Date();

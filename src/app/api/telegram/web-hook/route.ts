@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
-import connectDb from "@/lib/db";
-import Patient from "@/models/patientModel";
+import {getModels} from "@/lib/model";
 
 const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;async function sendMessage(chatId: number, text: string) {
   await axios.post(`${TELEGRAM_API}/sendMessage`, {
@@ -11,7 +10,7 @@ const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOK
 }
 
 export async function POST(req: Request) {
-  await connectDb();
+  const { Patient } = await getModels();
 
   const body = await req.json();
   const message = body.message;

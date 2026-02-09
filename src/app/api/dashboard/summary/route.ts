@@ -1,28 +1,19 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import Medicine from "@/models/medicineModel";
-import connectDb from "@/lib/db";
+import { getModels } from "@/lib/model";
 
 function utcDay(date: Date) {
   return new Date(
-    Date.UTC(
-      date.getUTCFullYear(),
-      date.getUTCMonth(),
-      date.getUTCDate()
-    )
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
   );
 }
 
 export async function GET() {
   try {
-
-    await connectDb();
-
-
+    const { Medicine } = await getModels();
     const session = await getServerSession(authOptions);
     if (!session?.user?.pharmacyId) {
-
       return NextResponse.json({
         today: 0,
         upcoming: 0,
@@ -34,11 +25,11 @@ export async function GET() {
 
     const medicines = await Medicine.find({
       pharmacyId: session.user.pharmacyId,
-      deleted: { $ne: true }
+      deleted: { $ne: true },
     })
-      .select("refillDate status") 
-      .limit(1000) 
-      .lean(); 
+      .select("refillDate status")
+      .limit(1000)
+      .lean();
 
     let todayCount = 0;
     let upcomingCount = 0;
@@ -55,7 +46,6 @@ export async function GET() {
         missedCount++;
       }
     });
-
 
     return NextResponse.json({
       today: todayCount,

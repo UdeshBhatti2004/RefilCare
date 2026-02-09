@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import Notification from "@/models/notificationModel";
-import connectDb from "@/lib/db";
+import { getModels } from "@/lib/model";
 
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  await connectDb();  const token = await getToken({ req });
+    const { Notification } = await getModels();
+  const token = await getToken({ req });
 
   if (!token?.pharmacyId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

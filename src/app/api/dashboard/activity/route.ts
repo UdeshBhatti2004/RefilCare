@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import RefillLog from "@/models/refillLogModel";
-import connectDb from "@/lib/db";
+import { getModels } from "@/lib/model"; 
 
 export async function GET() {
-
-    await connectDb()
+  const { RefillLog } = await getModels();
+  
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.pharmacyId) {

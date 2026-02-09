@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDb from "@/lib/db";
-import Medicine from "@/models/medicineModel";
+import { getModels } from "@/lib/model";
 import { getToken } from "next-auth/jwt";function utcDay(date: Date) {
   return new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
@@ -12,7 +11,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    await connectDb();
+    const { Medicine } = await getModels();
 
     const token = await getToken({ req });
     if (!token?.pharmacyId) {
