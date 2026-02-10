@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getModels } from "@/lib/model";
 import { sendTelegramMessage } from "@/lib/telegram";
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
+  console.log("[CRON] mark-missed triggered");
   const secret = req.headers.get("x-cron-secret");
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
