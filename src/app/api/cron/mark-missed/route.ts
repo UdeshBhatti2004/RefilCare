@@ -5,7 +5,11 @@ import { sendTelegramMessage } from "@/lib/telegram";
 export async function GET(req: NextRequest) {
   console.log("[CRON] mark-missed triggered");
   const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
+  const userAgent = req.headers.get("user-agent");
+
+  const isVercelCron = userAgent?.includes("vercel-cron");
+
+  if (!isVercelCron && secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -44,7 +48,7 @@ Please contact your pharmacy as soon as possible.`;
     } catch (error) {
       console.error(
         `Error processing missed refill for ${med.medicineName}:`,
-        error
+        error,
       );
     }
   }

@@ -2,20 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { getModels } from "@/lib/model";
 import { sendTelegramMessage } from "@/lib/telegram";
 
-export async function GET(req: NextRequest) { 
+export async function GET(req: NextRequest) {
   console.log("[CRON] today-refils triggered");
-   const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
+  const secret = req.headers.get("x-cron-secret");
+  const userAgent = req.headers.get("user-agent");
+
+  const isVercelCron = userAgent?.includes("vercel-cron");
+
+  if (!isVercelCron && secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-    const { Medicine, Patient } = await getModels();
+  const { Medicine, Patient } = await getModels();
 
-   const start = new Date();
+  const start = new Date();
   start.setHours(0, 0, 0, 0);
 
   const end = new Date();
-  end.setHours(23, 59, 59, 999);  const medicinesDueToday = await Medicine.find({
+  end.setHours(23, 59, 59, 999);
+  const medicinesDueToday = await Medicine.find({
     status: "active",
     deleted: { $ne: true },
     refillDate: {
@@ -24,16 +29,14 @@ export async function GET(req: NextRequest) {
     },
   });
 
-
-
   let sent = 0;
   let skipped = 0;
 
   for (const med of medicinesDueToday) {
-    try {      if (
+    try {
+      if (
         med.lastReminderSentAt &&
-        med.lastReminderSentAt.toDateString() ===
-          new Date().toDateString()
+        med.lastReminderSentAt.toDateString() === new Date().toDateString()
       ) {
         skipped++;
         continue;
@@ -60,14 +63,9 @@ Thank you.`;
 
       sent++;
     } catch (error) {
-      console.error(
-        ` Error sending reminder for ${med.medicineName}:`,
-        error
-      );
+      console.error(` Error sending reminder for ${med.medicineName}:`, error);
     }
   }
-
-
 
   return NextResponse.json({
     ok: true,
