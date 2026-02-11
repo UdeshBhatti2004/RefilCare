@@ -49,7 +49,7 @@ export default function DashboardPage() {
   }, [session]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 lg:py-12 font-sans text-slate-900">
+    <div className="min-h-screen bg-[#F8FAFC] px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-10 lg:py-20 font-sans text-slate-900">
       <div className="max-w-[1400px] mx-auto space-y-8 sm:space-y-10">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <motion.div

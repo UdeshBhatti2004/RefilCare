@@ -88,7 +88,7 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#F8FAFC] py-6 sm:py-10 lg:py-20">
       <div className="border-b border-slate-200 sticky top-0 z-30 bg-[#F8FAFC]/80 backdrop-blur-md">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 lg:py-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-6">

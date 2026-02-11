@@ -13,7 +13,7 @@ import {
   Menu,
   X,
   Plus,
-  Settings,
+  User,
   Bell,
 } from "lucide-react";
 
@@ -161,16 +161,16 @@ export default function Sidebar() {
               </p>
               <div className="space-y-1.5">
                 <Link
-                  href="/settings"
+                  href="/profile"
                   onClick={() => setOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all ${
-                    pathname === "/settings"
+                    pathname === "/profile"
                       ? "bg-white border border-slate-200 text-[#009688]"
                       : "text-slate-500 hover:bg-white"
                   }`}
                 >
-                  <Settings size={18} />
-                  Settings
+                  <User size={18} />
+                  Profile
                 </Link>
 
                 <Link

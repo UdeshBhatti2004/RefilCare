@@ -187,7 +187,7 @@ export default function MedicinesPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] font-sans text-slate-900 pb-12">
+    <div className="min-h-screen w-full bg-[#f8fafc] font-sans text-slate-900 pb-12 py-6 sm:py-10 lg:py-20">
       <div className="sticky top-20 z-30 bg-[#f8fafc]/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">

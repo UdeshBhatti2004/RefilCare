@@ -63,7 +63,7 @@ export default function NotificationsList() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden ">
 
       <div className="flex items-center gap-2 mb-6 px-1 shrink-0">
         <div className="p-1.5 bg-[#009688]/10 rounded-lg text-[#009688]">

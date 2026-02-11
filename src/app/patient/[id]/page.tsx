@@ -76,7 +76,7 @@ export default function PatientDetailPage() {
   if (!patient) return <div className="h-screen flex items-center justify-center font-black text-slate-400 uppercase tracking-widest text-sm">Record Not Found</div>;
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#F8FAFC] flex flex-col overflow-x-hidden font-sans text-slate-900">
+    <div className="min-h-screen lg:h-screen w-full bg-[#F8FAFC] flex flex-col pt-10 overflow-x-hidden font-sans text-slate-900">
       
       <nav className="shrink-0 w-full">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
@@ -90,13 +90,13 @@ export default function PatientDetailPage() {
         </div>
       </nav>
 
-      <main className="flex-1 max-w-[1600px] mx-auto px-4 sm:px-8 pb-6 w-full overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row gap-6">
+      <main className="flex-1 max-w-[1600px] mx-auto px-4 sm:px-8 pb-10 w-full overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row gap-6 items-stretch">
         
         <aside className="w-full lg:w-80 xl:w-96 flex flex-col shrink-0">
           <motion.div 
             initial={{ opacity: 0, x: -10 }} 
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col shadow-sm"
+            className="bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col shadow-sm h-full"
           >
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] bg-gradient-to-br from-[#009688] to-emerald-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-black shadow-lg shadow-teal-100 mb-4 sm:mb-5 shrink-0 uppercase">
@@ -211,7 +211,7 @@ export default function PatientDetailPage() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="h-40 lg:h-full flex flex-col items-center justify-center opacity-30">
+                <div className="h-full flex flex-col items-center justify-center opacity-30">
                   <Pill size={40} className="mb-2" />
                   <p className="text-[10px] font-black uppercase">No Active Data</p>
                 </div>

@@ -33,7 +33,7 @@ export default function RootLayout({
         <ClientProvider>
           <LayoutClient>
             
-            <div className="pt-20 min-h-screen">{children}</div>
+            <div className="min-h-screen">{children}</div>
           </LayoutClient>
           <Toaster position="top-right" />
         </ClientProvider>

@@ -168,8 +168,8 @@ export default function NewPatientPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#F8FAFC]">
-      <div className="w-full border-b border-slate-200 px-6 py-4 lg:px-10 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+    <div className="min-h-screen w-full flex flex-col bg-[#F8FAFC] py-6 sm:py-10 lg:py-20">
+      <div className="w-full border-b border-slate-200 px-6 py-4 lg:px-10 backdrop-blur-sm sticky top-0 z-10">
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}

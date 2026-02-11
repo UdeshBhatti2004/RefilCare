@@ -76,8 +76,8 @@ export default function NewMedicinePage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 flex flex-col">
-      <div className="w-full bg-white/50 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 flex flex-col py-6 sm:py-10 lg:py-20">
+      <div className="w-full  backdrop-blur-md sticky top-0 z-30 border-b border-slate-200">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
           <button
             onClick={() => router.back()}
