@@ -16,6 +16,7 @@ export interface MedicineT {
 
   status: "active" | "refilled" | "stopped";
   lastReminderSentAt: Date;
+  lastUpcomingReminderSentAt?: Date;
   deleted: Boolean;
   deletedAt: Date;
 
@@ -80,6 +81,10 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
       type: Date,
       default: null,
     },
+    lastUpcomingReminderSentAt: {
+      type: Date,
+      default: null,
+    },
     deleted: {
       type: Boolean,
       default: false,
@@ -89,7 +94,8 @@ const MedicineSchema = new mongoose.Schema<MedicineT>(
     },
   },
   { timestamps: true },
-);MedicineSchema.index({ pharmacyId: 1, deleted: 1, createdAt: -1 });
+);
+MedicineSchema.index({ pharmacyId: 1, deleted: 1, createdAt: -1 });
 MedicineSchema.index({ pharmacyId: 1, refillDate: 1 });
 MedicineSchema.index({ patientId: 1 });
 
