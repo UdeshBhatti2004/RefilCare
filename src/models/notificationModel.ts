@@ -8,7 +8,7 @@ export interface NotificationT extends Document {
   type: "upcoming" | "missed";
   message: string;
 
-  read: boolean;
+  isRead: boolean;
   createdAt: Date;
 }
 
@@ -43,7 +43,7 @@ const NotificationSchema = new Schema<NotificationT>(
       required: true,
     },
 
-    read: {
+    isRead: {
       type: Boolean,
       default: false,
     },

@@ -7,7 +7,11 @@ export const notificationsApi = createApi({
   }),
   tagTypes: ["Notifications"],
   endpoints: (builder) => ({
-    getNotifications: builder.query<any[], void>({
+
+    getNotifications: builder.query<
+      { notifications: any[]; unreadCount: number },
+      void
+    >({
       query: () => "/notifications",
       providesTags: ["Notifications"],
     }),
@@ -22,11 +26,12 @@ export const notificationsApi = createApi({
 
     markAllRead: builder.mutation<void, void>({
       query: () => ({
-        url: `/notifications/read-all`,
+        url: `/notifications/mark-all`,
         method: "PATCH",
       }),
       invalidatesTags: ["Notifications"],
     }),
+
   }),
 });
 

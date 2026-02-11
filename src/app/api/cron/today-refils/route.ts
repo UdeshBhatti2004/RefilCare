@@ -45,15 +45,17 @@ export async function GET(req: NextRequest) {
       const patient = await Patient.findById(med.patientId);
       if (!patient || !patient.telegramChatId) continue;
 
-      const message = `💊 <b>Medicine Refill Reminder</b>
+      const message = `💊 <b>Medication Reminder</b>
 
 Hello ${patient.name},
 
-Your medicine "<b>${med.medicineName}</b>" is due for refill today.
+This is a friendly reminder that "<b>${med.medicineName}</b>" is due for refill today.
 
-Please contact your pharmacy.
+If you’ve already taken care of this, please disregard this message.
 
-Thank you.`;
+If not, we’re here to assist you whenever convenient.
+
+Wishing you good health.`;
 
       await sendTelegramMessage(patient.telegramChatId, message);
 

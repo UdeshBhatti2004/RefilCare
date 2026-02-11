@@ -34,13 +34,18 @@ export async function GET(req: NextRequest) {
       const patient = await Patient.findById(med.patientId);
       if (!patient?.telegramChatId) continue;
 
-      const message = `⚠️ <b>Missed Refill Alert</b>
+      const message = `⚠️ <b>Refill Reminder</b>
 
 Hello ${patient.name},
 
-You missed the refill for "<b>${med.medicineName}</b>".
+This is a reminder regarding your medicine "<b>${med.medicineName}</b>", which was scheduled for refill.
 
-Please contact your pharmacy as soon as possible.`;
+If this has already been taken care of, you may ignore this message.
+
+Otherwise, please contact us for further assistance.
+
+Take care.`;
+
 
       await sendTelegramMessage(patient.telegramChatId, message);
 

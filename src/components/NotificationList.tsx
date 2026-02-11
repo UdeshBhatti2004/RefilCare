@@ -1,8 +1,11 @@
 "use client";
 
 import NotificationItem from "./NotificationItem";
-import { useGetNotificationsQuery } from "@/redux/api/notificationsApi";
-import { Bell, CheckCircle2, Inbox } from "lucide-react";
+import {
+  useGetNotificationsQuery,
+  useMarkAllReadMutation,
+} from "@/redux/api/notificationsApi";
+import { Bell, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Notification = {
@@ -15,7 +18,16 @@ type Notification = {
 };
 
 export default function NotificationsList() {
-  const { data: notifications = [], isLoading } = useGetNotificationsQuery();
+  const { data, isLoading } = useGetNotificationsQuery();
+  const [markAllRead, { isLoading: marking }] =
+    useMarkAllReadMutation();
+
+  const notifications: Notification[] = data?.notifications ?? [];
+  const unreadCount: number = data?.unreadCount ?? 0;
+
+  async function handleMarkAll() {
+    await markAllRead().unwrap();
+  }
 
   if (isLoading) {
     return (
@@ -30,9 +42,9 @@ export default function NotificationsList() {
     );
   }
 
-  if (!notifications.length) {
+  if (!notifications.length && unreadCount === 0) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-20 px-6 text-center"
@@ -40,9 +52,11 @@ export default function NotificationsList() {
         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
           <CheckCircle2 className="text-[#009688] opacity-20" size={32} />
         </div>
-        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Queue Status: Clear</h3>
+        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
+          Queue Status: Clear
+        </h3>
         <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 opacity-60">
-          You’re all caught up 🎉
+          You’re all caught up
         </p>
       </motion.div>
     );
@@ -50,25 +64,41 @@ export default function NotificationsList() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      
+
       <div className="flex items-center gap-2 mb-6 px-1 shrink-0">
         <div className="p-1.5 bg-[#009688]/10 rounded-lg text-[#009688]">
           <Bell size={14} />
         </div>
+
         <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
-          System Alerts ({notifications.length})
+          System Alerts ({unreadCount} Unread)
         </span>
+
         <div className="h-px flex-1 bg-slate-100" />
+
+        {unreadCount > 0 && (
+          <button
+            onClick={handleMarkAll}
+            disabled={marking}
+            className="text-[9px] font-black uppercase tracking-widest text-[#009688] hover:opacity-70 transition-opacity disabled:opacity-40"
+          >
+            {marking ? "Updating..." : "Mark All"}
+          </button>
+        )}
       </div>
 
-      
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
-        <AnimatePresence mode="popLayout">
+     
+      <div
+        key={unreadCount}   
+        className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3"
+      >
+        <AnimatePresence>
           {notifications.map((n: Notification, idx: number) => (
             <motion.div
-              key={n._id}
+              key={`${n._id}-${n.isRead}`} 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
               transition={{ delay: idx * 0.05 }}
             >
               <NotificationItem notification={n} />
@@ -76,8 +106,8 @@ export default function NotificationsList() {
           ))}
         </AnimatePresence>
       </div>
-      
-      
+
+  
       <div className="mt-4 pt-4 border-t border-slate-50 shrink-0">
         <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em] text-center">
           End of notification stream
